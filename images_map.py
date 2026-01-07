@@ -41,4 +41,29 @@ IMAGES = {
         "https://drive.google.com/file/d/1FLRJYmFHla5EYjzyqQHdIsYEj63ODj0y/view?usp=drive_link",
         "https://drive.google.com/file/d/1RR4QxJYvIx2p01qWCk4WAS86OtKfjYL9/view?usp=drive_link",
     ],
+    "100110": [
+        "https://drive.google.com/file/d/1Iv9mDIwDsl3p_52DsdVXkb6EU9PDznAP/view?usp=drive_link",
+        "https://drive.google.com/file/d/13KLBz9pu_R9fG0qVE-Lq6dneydA-wwOR/view?usp=drive_link",
+        "https://drive.google.com/file/d/18r54D9tmzP_GA6Syx1-2WEuz7zRstlCI/view?usp=drive_link",
+    ],
+    "100111": [
+        "https://drive.google.com/file/d/1wdBj1kgrcLXpkubhoDcf26m5RjLZCwjV/view?usp=drive_link",
+        "https://drive.google.com/file/d/1kkmYYr1nKQIQTAfexvwxTz_2nSCX5Fcf/view?usp=drive_link",
+        "https://drive.google.com/file/d/1hFHoGnR9SrdhZHS5BIwPRAzi5t9k57d5/view?usp=drive_link",
+    ],
+    "100112": [
+        "https://drive.google.com/file/d/1s7dM4f-7Ku-z9u7jYFcIOav91G1TwiFo/view?usp=drive_link",
+        "https://drive.google.com/file/d/1eWPtEsn2jd-ZWiijpgXqBf_fzPHkYiJS/view?usp=drive_link",
+        "https://drive.google.com/file/d/1P6HVTi9g-a7PeQGLvLOU1lGwbbs9Tuee/view?usp=drive_link",
+    ],    
+    "100113": [
+        "https://drive.google.com/file/d/1zL9lrnvOn2tQMtQJbkSiVwJ1a1FgXVqC/view?usp=drive_link",
+        "https://drive.google.com/file/d/1D4bQgS8-KEq00YXa_5VJRwktGAAGrhSs/view?usp=drive_link",
+        "https://drive.google.com/file/d/1ji2XxOaZMOi44PO_gXe_fXznjmYOSLmZ/view?usp=drive_link",
+    ],
+    "100112": [
+        "",
+        "",
+        "",
+    ],
 }
