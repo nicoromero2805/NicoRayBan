@@ -614,6 +614,42 @@ textarea{ min-height:90px; resize:vertical; }
   height: 25px;
   object-fit: contain;
 }
+/* Carrusel por scroll en detalle */
+.pm-snap{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.pm-snap::-webkit-scrollbar{
+  height: 6px;
+}
+.pm-snap::-webkit-scrollbar-thumb{
+  background: rgba(79,70,229,.45);
+  border-radius: 999px;
+}
+
+.pm-slide{
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pm-slide img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
 /* Responsive */
 @media (max-width: 900px){
   .layout{ grid-template-columns: 1fr; padding:12px; }
