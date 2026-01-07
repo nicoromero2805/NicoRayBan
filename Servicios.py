@@ -4,14 +4,18 @@ import pandas as pd
 import requests
 from io import BytesIO
 import re
-
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from images_map import IMAGES  # <-- tu mapa manual de imágenes
 
 app = FastAPI(title="Servicios Lentes")
 # ✅ Variables modificables (precios)
 Precio_lentes = 110000
 precio_polarizado = 120000
-
+app.mount("/static", StaticFiles(directory="."), name="static")
+@app.get("/")
+def home():
+    return FileResponse("index.html")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -143,14 +147,14 @@ def _load_df():
 # =========================
 
 
-@app.get("/products")
+app.get("/products")
 def products():
     out, header_row, columns = _load_df()
     items = out.to_dict(orient="records")
 
     # Agregar imágenes desde images_map.py
     for it in items:
-        raw_imgs = IMAGES.get(it["sku"], [])
+        raw_imgs = IMAGES(it["sku"], [])
         imgs = [drive_view_to_direct(u) for u in raw_imgs]
         it["foto_url"] = imgs[0] if imgs else None
         it["gallery"] = imgs
