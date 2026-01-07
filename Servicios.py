@@ -146,7 +146,6 @@ def _load_df():
 # Endpoints
 # =========================
 
-
 @app.get("/products")
 def products():
     out, header_row, columns = _load_df()
@@ -154,20 +153,13 @@ def products():
 
     # Agregar imágenes desde images_map.py
     for it in items:
-        raw_imgs = IMAGES(it["sku"], [])
+        raw_imgs = IMAGES.get(it["sku"], [])
         imgs = [drive_view_to_direct(u) for u in raw_imgs]
         it["foto_url"] = imgs[0] if imgs else None
         it["gallery"] = imgs
-        desc = it["description"].lower()
-        if "polarizado" in desc:
-            it["price"] = precio_polarizado
-        else:
-            it["price"] = Precio_lentes
-    # Log simple
-    print("\n=== SKU | DESCRIPCION ===")
-    for it in items:
-        print(f"{it['sku']} | {it['description']}")
-    print("=========================\n")
+
+        desc = (it.get("description") or "").lower()
+        it["price"] = precio_polarizado if "polarizado" in desc else Precio_lentes
 
     return {
         "count": len(items),
@@ -175,7 +167,6 @@ def products():
         "columns": columns,
         "items": items
     }
-
 
 @app.get("/stock/{sku}")
 def stock_by_sku(sku: str):
