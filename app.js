@@ -272,8 +272,15 @@ function openProduct(sku){
   $("pmStockPill").textContent = `Stock: ${stock}`;
   $("pmPrice").textContent = moneyARS(p.price);
 
-  const main = $("pmImg");
-  main.src = PM_GALLERY[0] || "";
+  const snap = $("pmSnap");
+snap.innerHTML = PM_GALLERY.map(u => `
+  <div class="pm-slide">
+    <img src="${escapeHtml(u)}" alt="foto" loading="lazy">
+  </div>
+`).join("");
+
+// arrancar en la primera
+snap.scrollLeft = 0;
 
   const thumbs = $("pmThumbs");
   thumbs.innerHTML = PM_GALLERY.map((u,i)=>`
@@ -281,11 +288,23 @@ function openProduct(sku){
       <img src="${escapeHtml(u)}" alt="thumb" loading="lazy">
     </div>
   `).join("");
+  let pmScrollTimer = null;
+snap.addEventListener("scroll", () => {
+  clearTimeout(pmScrollTimer);
+  pmScrollTimer = setTimeout(() => {
+    const i = Math.round(snap.scrollLeft / snap.clientWidth);
+    thumbs.querySelectorAll(".pm-thumb").forEach(x=>x.classList.remove("active"));
+    const t = thumbs.querySelector(`.pm-thumb[data-i="${i}"]`);
+    if(t) t.classList.add("active");
+  }, 60);
+});
+
 
   thumbs.querySelectorAll(".pm-thumb").forEach(t=>{
     t.addEventListener("click", ()=>{
       const i = Number(t.getAttribute("data-i")||0);
-      main.src = PM_GALLERY[i] || PM_GALLERY[0] || "";
+      const slideW = snap.clientWidth;
+      snap.scrollTo({ left: i * slideW, behavior: "smooth" });
       thumbs.querySelectorAll(".pm-thumb").forEach(x=>x.classList.remove("active"));
       t.classList.add("active");
     });
