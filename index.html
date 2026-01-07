@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lentes - Catálogo</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn" id="btnBackTop" type="button" title="Volver" aria-label="Volver">←</button>
+
+    <div class="brand">
+      <div class="brand-logo">
+	  <img src="./logo_NR.png" alt="Logo" class="brand-img">
+	  </div>											  
+      <div class="brand-text">
+        <div class="brand-title">Lentes</div>
+        <div class="brand-sub">Catálogo</div>
+      </div>
+    </div>
+
+    <button class="icon-btn cart-btn" id="btnOpenCart" type="button" title="Carrito" aria-label="Carrito">
+      🛒
+      <span class="badge" id="cartBadge">0</span>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <section class="card">
+        <h3>ENTRA EN CONTACTO</h3>
+        <div class="contact">
+          <div class="contact-row">
+		  <img src="./whatsapp.png" alt="WhatsApp" class="wa-icon">
+		  <!--💬 WhatsApp: -->
+		  <a href="https://wa.me/5493512070090?text=Hola%20Nico%20quiero%20hacerte%20una%20consulta%20sobre%20los%20lentes%20rayban"
+												target="_blank"
+												rel="noopener">+543512070090</a></div>		  																												  																					 
+                </div>
+      </section>
+
+      <section class="card">
+        <h3>ENTREGA</h3>
+        <div class="muted">Envíos por correo argentino</div>
+      </section>
+
+      <section class="card">
+        <h3>CATEGORÍAS</h3>
+        <div class="cat-vertical" id="catVertical"></div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="mobile-info" id="mobileInfo">
+        <div class="mobile-info-card">
+          <div class="mi-title">CONTACTO</div>
+          <div class="mi-row">💬 
+		  <a href="https://wa.me/5493512070090?text=Hola%20Nico%20quiero%20hacerte%20una%20consulta%20sobre%20los%20lentes%20rayban" target="_blank" rel="noopener">+543512070090</a>
+		  </div>
+		  </div>								   
+        <div class="mobile-info-card">
+          <div class="mi-title">ENTREGA</div>
+          <div class="mi-row">🚚 Envíos por correo argentino</div>
+        </div>
+      </section>
+
+      <section class="hero">
+        <img
+          class="hero-img"
+          src="https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=1600&q=80"
+          alt="banner"
+        />
+        <div class="hero-overlay">
+          <div class="hero-title">Buen día 👋</div>
+          <div class="hero-sub">Ya estamos activos por consultas</div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <div class="controls-row">
+          <div class="search">
+            <span class="search-ico">🔎</span>
+            <input id="q" type="search" placeholder="Buscar por descripción o SKU..." />
+          </div>
+
+          <button class="icon-btn" id="btnToggleView" type="button" title="Cambiar vista" aria-label="Cambiar vista">
+            <span id="viewIcon">▦</span>
+          </button>
+        </div>
+
+        <div class="chips" id="chips"></div>
+      </section>
+
+      <section class="products">
+        <div class="section-head">
+          <div class="section-title" id="sectionTitle">INICIO</div>
+          <div class="muted" id="meta">—</div>
+        </div>
+
+        <div id="grid" class="grid"></div>
+        <div id="list" class="list hidden"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="backdrop hidden" id="backdrop"></div>
+  <div class="pmodal hidden" id="pmodal" aria-hidden="true">
+    <div class="pmodal-card">
+      <div class="pmodal-head">
+        <button class="btn ghost" id="pmClose" type="button">←</button>
+        <div class="pmodal-head-mid">
+          <div class="pmodal-title" id="pmTitle">Detalle</div>
+          <div class="pmodal-sub" id="pmSub">SKU</div>
+        </div>
+        <div style="width:44px;"></div>
+      </div>
+
+      <div class="pmodal-body">
+        <div class="pm-gallery">
+          <div class="pm-main">
+            <img id="pmImg" alt="producto" />
+          </div>
+          <div class="pm-thumbs" id="pmThumbs"></div>
+        </div>
+
+        <div class="pm-info">
+          <div class="pm-line">
+		  <span class="k">Categoría:</span>
+		  <span id="pmCat"></span>
+		  </div>
+          <div class="pm-desc" id="pmDesc"></div>
+
+          <div class="pm-row">
+            <span class="pill" id="pmStockPill">Stock: 0</span>
+            <span class="price" id="pmPrice"></span>
+          </div>
+
+          <button class="btn" id="pmAdd" type="button">Añadir al carrito</button>
+		  <button class="wa-consult" id="pmConsult" type="button">
+			<img src="./whatsapp.png" alt="WhatsApp" class="wa-btn-icon">
+			Consultar por este lente
+			</button>			  
+          <div class="muted" id="pmHint"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+    <div class="cart-head">
+      <button class="btn ghost" id="cartBack" type="button" aria-label="Volver">←</button>
+      <div class="cart-head-mid">
+        <div class="cart-logo">🕶️</div>
+      </div>
+      <button class="btn ghost" id="cartClose" type="button" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="step step-active" id="stepCart">
+      <div class="cart-title-row">
+        <div class="cart-title" id="cartTitle">Carrito (0)</div>
+        <button class="link" id="btnClearCart" type="button">Vaciar carrito</button>
+      </div>
+
+      <div id="cartItems"></div>
+
+      <div class="cart-links">
+        <button class="link" id="btnMoreProducts" type="button">Ver más productos →</button>
+      </div>
+
+      <div class="cart-block">
+        <div class="block-title">Observación</div>
+        <textarea id="cartNote" maxlength="200" placeholder="Escribe aquí la observación de tu pedido"></textarea>
+        <div class="note-count"><span id="noteCount">0</span>/200</div>
+      </div>
+
+      <div class="cart-block">
+        <div class="block-title">Forma de entrega</div>
+
+        <label class="radio active" id="optDelivery">
+          <input type="radio" name="delivery" checked />
+          <div>
+            <div class="radio-title">🚚 Entrega</div>
+            <div class="muted">Envíos por correo argentino</div>
+          </div>
+        </label>
+
+        <label class="radio" id="optPickup">
+          <input type="radio" name="delivery" />
+          <div>
+            <div class="radio-title">🏪 Retiro</div>
+            <div class="muted">Coordinar punto de retiro</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="step" id="stepData">
+      <div class="data-title">Datos</div>
+
+      <div class="cart-block">
+        <div class="block-title">Nombre y apellido</div>
+        <input id="custName" type="text" placeholder="Ej: Nicolás Romero" />
+        <div class="field-err" id="errName"></div>
+      </div>
+
+      <div class="cart-block">
+        <div class="block-title">Teléfono</div>
+        <input id="custPhone" type="text" placeholder="+54 9 ..." />
+        <div class="field-err" id="errPhone"></div>
+      </div>
+
+      <div class="cart-block" id="addrBlock">
+        <div class="block-title">Dirección</div>
+        <textarea id="custAddress" placeholder="Calle, número, ciudad"></textarea>
+        <div class="field-err" id="errAddress"></div>
+      </div>
+
+   <!--   <div class="cart-block">
+        <div class="block-title">Método de pago</div>
+        <label class="radio active" id="optPayOther">
+          <input type="radio" name="pay" checked />
+          <div>
+            <div class="radio-title">💳 Otros</div>
+            <div class="muted">Se coordina por WhatsApp</div>
+          </div>
+        </label>
+      </div>-->
+
+      <div class="cart-block">
+        <div class="block-title">Resumen</div>
+        <div id="checkoutSummary"></div>
+      </div>
+    </div>
+
+    <div class="cart-footer">
+      <div class="total-row">
+		<span>Subtotal</span>
+		<strong id="cartSubtotal">$ 0</strong>
+		</div>
+
+	<div class="total-row muted">
+    <span>Envío</span>
+    <strong id="cartShipping">$ 0</strong>
+	</div>
+
+	<div class="total-row">
+    <span>Total</span>
+    <strong id="cartTotal">$ 0</strong>
+	</div>
+
+      <button class="btn" id="btnContinue" type="button">Continuar para finalizar</button>
+      <button class="btn" id="btnSend" type="button">📲 Enviar pedido</button>
+
+      <div class="muted small">* No se puede agregar si no hay stock.</div>
+    </div>
+  </aside>
+
+  <script src="./app.js"></script>
+</body>
+</html>
