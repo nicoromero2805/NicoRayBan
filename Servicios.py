@@ -147,7 +147,7 @@ def _load_df():
 # =========================
 
 
-app.get("/products")
+@app.get("/products")
 def products():
     out, header_row, columns = _load_df()
     items = out.to_dict(orient="records")
