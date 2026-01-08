@@ -276,7 +276,9 @@ IMAGES = {
         "https://drive.google.com/file/d/1992h_rI_CjiMPa5Qc0YI99r15_dHQoXe/view?usp=drive_link",
     ],
      "100182": [
-        "https://drive.google.com/file/d/1992h_rI_CjiMPa5Qc0YI99r15_dHQoXe/view?usp=drive_link",
+        "https://drive.google.com/file/d/1H1W0nNT52rNbFWY3gfUoCjdpQnFMFTdf/view?usp=drive_link",
+        "https://drive.google.com/file/d/1lABgtFQPtDWj3x7ghAOoYdoP6d6mPYbU/view?usp=drive_link",
+        "https://drive.google.com/file/d/1NcghrWTMHHn5DomP2aT26o7Hd6xZocgj/view?usp=drive_link",
     ],
      "100183": [
         "https://drive.google.com/file/d/1iALV7Jo0eOwnUxbW-MFh9JfZOtbiJqaW/view?usp=drive_link",
@@ -430,6 +432,10 @@ IMAGES = {
         "https://drive.google.com/file/d/1ReYF72D6DuD0d1N1vDknmV-Fj8W9XzaJ/view?usp=drive_link",
         "https://drive.google.com/file/d/1K_FiWXXQ4E0vPHCKsc3tk78cCFalt_Nq/view?usp=drive_link",
         "https://drive.google.com/file/d/1UDy6J0j_emd6iQsCaDMcqZp17Jj5wpUF/view?usp=drive_link",
+    ],
+    "100282": [
+        "https://images-cdn.kyte.site/v0/b/kyte-7c484.appspot.com/o/ZpRYyKYX2GOizYXEVls9M3ARZCI3%2FI7iCBuFgcZu81J4ttjRhw%3D%3D.jpg?alt=media",
+        "https://images-cdn.kyte.site/v0/b/kyte-7c484.appspot.com/o/ZpRYyKYX2GOizYXEVls9M3ARZCI3%2FD6aoIxR3zjfs6qSysybbRA%3D%3D.jpg?alt=media",        
     ],
     "100283": [
         "https://drive.google.com/file/d/1beYq2Qp-PiSgr_tkbMmpOM0OFDZCHCRt/view?usp=drive_link",
