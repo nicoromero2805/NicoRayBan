@@ -572,8 +572,8 @@ textarea{ min-height:90px; resize:vertical; }
   gap:8px;
 }
 .wa-icon{
-  width:28px;
-  height:28px;
+  width:18px;
+  height:18px;
   object-fit:contain;
 }
 /* Botón WhatsApp en detalle de producto */
