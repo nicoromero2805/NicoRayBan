@@ -47,6 +47,9 @@ function inferCategory(desc){
   if (parts[0] === "THE" && parts[1] === "JA") return "THE JA-JO";
   if (parts[0] === "THE" && parts[1]) return `THE ${parts[1]}`;
   if (parts[0] === "BIL" || parts[0] === "BILL") return "BILL";
+  if (parts[0] === "FERRARI" || parts[0] === "SCUDERIA") return "FERRARI";
+  if (parts[0] === "CAT") return "CAT EYE";
+  if (parts[0] === "CATS") return "CAT 500";
   return parts[0];
 }
 
