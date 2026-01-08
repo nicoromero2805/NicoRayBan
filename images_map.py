@@ -276,9 +276,7 @@ IMAGES = {
         "https://drive.google.com/file/d/1992h_rI_CjiMPa5Qc0YI99r15_dHQoXe/view?usp=drive_link",
     ],
      "100182": [
-        "https://drive.google.com/file/d/1H1W0nNT52rNbFWY3gfUoCjdpQnFMFTdf/view?usp=drive_link",
-        "https://drive.google.com/file/d/1lABgtFQPtDWj3x7ghAOoYdoP6d6mPYbU/view?usp=drive_link",
-        "https://drive.google.com/file/d/1NcghrWTMHHn5DomP2aT26o7Hd6xZocgj/view?usp=drive_link",
+        "https://drive.google.com/file/d/1992h_rI_CjiMPa5Qc0YI99r15_dHQoXe/view?usp=drive_link",
     ],
      "100183": [
         "https://drive.google.com/file/d/1iALV7Jo0eOwnUxbW-MFh9JfZOtbiJqaW/view?usp=drive_link",
