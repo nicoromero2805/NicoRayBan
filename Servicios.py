@@ -10,8 +10,8 @@ from images_map import IMAGES  # <-- tu mapa manual de imágenes
 
 app = FastAPI(title="Servicios Lentes")
 # ✅ Variables modificables (precios)
-Precio_lentes = 110000
-precio_polarizado = 120000
+Precio_lentes = 125000
+precio_polarizado = 135000
 app.mount("/static", StaticFiles(directory="."), name="static")
 @app.get("/")
 def home():
