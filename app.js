@@ -40,7 +40,7 @@ function openAddPopup(p){
   pop.classList.remove("hidden");
 
   clearTimeout(ADD_POP_TIMEOUT);
-  ADD_POP_TIMEOUT = setTimeout(closeAddPopup, 4500); // auto-cierre opcional
+  ADD_POP_TIMEOUT = setTimeout(closeAddPopup, 15000); // auto-cierre opcional
 }
 
 function closeAddPopup(){
