@@ -257,7 +257,21 @@
       <div class="muted small">* No se puede agregar si no hay stock.</div>
     </div>
   </aside>
+  <!-- inicio pop up confirma -->
+<div id="addPopBackdrop" class="ap-backdrop hidden"></div>
 
+<div id="addPop" class="ap-pop hidden" role="dialog" aria-modal="true" aria-labelledby="apTitle">
+  <div class="ap-card">
+    <div class="ap-title" id="apTitle">✅ Agregado correctamente</div>
+    <div class="ap-sub" id="apSub"></div>
+
+    <div class="ap-actions">
+      <button id="apContinue" class="btn ap-ghost" type="button">Seguir comprando</button>
+      <button id="apGoCart" class="btn ap-primary" type="button">Ir al carrito</button>
+    </div>
+  </div>
+</div>
+  <!-- fin pop up confirma -->
   <script src="/static/app.js"></script>
 </body>
 </html>
