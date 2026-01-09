@@ -7,7 +7,7 @@ const API_BASE = "";
 
 // WhatsApp del vendedor (sin +, sin espacios). Ej: 5493513562759
 const WHATSAPP_NUMBER = "5493512070090";
-const SHIPPING_COST = 10000; // pesos
+const SHIPPING_COST = 0; // Costo envio
 const CART_KEY = "lentes_cart_v2";
 let ALL = [];
 let ACTIVE_CATEGORY = "FERRARI"; // Para iniciar en una categoria Colocamos la categoria que queremos , sino ponemos INICIO y CARGA TODOS
