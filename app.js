@@ -21,6 +21,38 @@ let PM_PRODUCT = null;
 
 function $(id){ return document.getElementById(id); }
 
+// =========================
+// ✅ Popup "Agregado correctamente"
+// =========================
+let ADD_POP_TIMEOUT = null;
+
+function openAddPopup(p){
+  const bd  = $("addPopBackdrop");
+  const pop = $("addPop");
+  const sub = $("apSub");
+
+  // Si por algún motivo no existe el HTML, no rompemos la app
+  if(!bd || !pop || !sub) return;
+
+  sub.textContent = p ? `${p.description || ""} (SKU: ${p.sku})` : "";
+
+  bd.classList.remove("hidden");
+  pop.classList.remove("hidden");
+
+  clearTimeout(ADD_POP_TIMEOUT);
+  ADD_POP_TIMEOUT = setTimeout(closeAddPopup, 4500); // auto-cierre opcional
+}
+
+function closeAddPopup(){
+  const bd  = $("addPopBackdrop");
+  const pop = $("addPop");
+  if(!bd || !pop) return;
+
+  clearTimeout(ADD_POP_TIMEOUT);
+  bd.classList.add("hidden");
+  pop.classList.add("hidden");
+}
+
 function escapeHtml(s){
   return String(s ?? "")
     .replaceAll("&","&amp;")
@@ -91,6 +123,9 @@ function addToCart(sku){
   saveCart();
   renderCart();
   updateCartBadge();
+
+  // ✅ Popup confirmación
+  openAddPopup(p);
 }
 
 function incFromCart(sku){
@@ -380,18 +415,21 @@ function renderCart(){
   $("noteCount").textContent = ($("cartNote").value || "").length;
 
   let subtotal = 0;
-for(const it of items){
-  const p = findProduct(it.sku);
-  subtotal += Number(p?.price || 0) * Number(it.qty || 0);
-}
+  for(const it of items){
+    const p = findProduct(it.sku);
+    subtotal += Number(p?.price || 0) * Number(it.qty || 0);
+  }
 
-const shipping = items.length > 0 ? SHIPPING_COST : 0; 
-const total = subtotal + shipping;
+													   
+								  
 
-$("cartSubtotal").textContent = moneyARS(subtotal) || "$ 0";
-$("cartShipping").textContent = moneyARS(shipping) || "$ 0";
-$("cartTotal").textContent = moneyARS(total) || "$ 0";
+  const shipping = items.length > 0 ? SHIPPING_COST : 0;
+  const total = subtotal + shipping;
+													  
 
+  $("cartSubtotal").textContent = moneyARS(subtotal) || "$ 0";
+  $("cartShipping").textContent = moneyARS(shipping) || "$ 0";
+  $("cartTotal").textContent = moneyARS(total) || "$ 0";
 
   $("addrBlock").style.display = deliveryIsOn() ? "block" : "none";
 
@@ -606,20 +644,49 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("btnSend").style.display = "none";
   $("btnContinue").style.display = "block";
   $("cartBack").style.visibility = "hidden";
-// consulta Productos
-const pmConsultBtn = $("pmConsult");
-if (pmConsultBtn) {
-  pmConsultBtn.addEventListener("click", () => {
-    if(!PM_PRODUCT) return;
+					 
+									
+				   
+												
+						   
 
-    const msg = `Tengo una consulta sobre el lente : ${PM_PRODUCT.sku} - ${PM_PRODUCT.description}`;
-    const url = `https://wa.me/${encodeURIComponent(WHATSAPP_NUMBER)}?text=${encodeURIComponent(msg)}`;
+  // ✅ Popup "Agregado correctamente"
+  const bd = $("addPopBackdrop");
+  const b1 = $("apContinue");
+  const b2 = $("apGoCart");
 
-    window.open(url, "_blank", "noopener,noreferrer");
+  if(bd) bd.addEventListener("click", closeAddPopup);
+
+  if(b1){
+    b1.addEventListener("click", () => {
+      closeAddPopup();
+    });
+  }
+
+  if(b2){
+    b2.addEventListener("click", () => {
+      closeAddPopup();
+      openCart();
+      goStep("cart");
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if(e.key === "Escape") closeAddPopup();
   });
-}
 
+  // consulta Productos
+  const pmConsultBtn = $("pmConsult");
+  if (pmConsultBtn) {
+    pmConsultBtn.addEventListener("click", () => {
+      if(!PM_PRODUCT) return;
 
+      const msg = `Tengo una consulta sobre el lente : ${PM_PRODUCT.sku} - ${PM_PRODUCT.description}`;
+      const url = `https://wa.me/${encodeURIComponent(WHATSAPP_NUMBER)}?text=${encodeURIComponent(msg)}`;
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+  }
 
   try{
     await loadCatalog();
