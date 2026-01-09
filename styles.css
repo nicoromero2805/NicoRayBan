@@ -743,3 +743,10 @@ textarea{ min-height:90px; resize:vertical; }
   }
   
 }
+@media (min-width: 1024px){
+  .hero-img{
+    height:380px;
+    object-fit: contain;
+    background-color: #fff;
+  }
+}
