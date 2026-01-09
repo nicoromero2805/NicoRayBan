@@ -745,8 +745,8 @@ textarea{ min-height:90px; resize:vertical; }
 }
 @media (min-width: 1024px){
   .hero-img{
-    height:380px;
-    object-fit: contain;
-    background-color: #fff;
+    height: 420px;              /* más alto => menos recorte */
+    object-fit: cover;          /* llena todo el hero */
+    object-position: center 60%;/* ajustá el foco (probá 50%..70%) */
   }
 }
