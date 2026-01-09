@@ -881,7 +881,64 @@ textarea{ min-height:90px; resize:vertical; }
     transform: rotate(20deg) translateX(120%);
   }
 }
+/* Banner Envío Gratis (mobile) */
+.ship-mobile{
+  border: 1px solid rgba(79,70,229,.16);
+  background: linear-gradient(180deg, rgba(79,70,229,.07), #fff);
+  border-radius: 14px;
 
+  padding: 8px 12px;
+  margin-bottom: 6px;   /* 👈 lo acerca al hero */
+
+  /* animación 1 sola vez */
+  animation: shipIn 600ms ease-out forwards;
+}
+
+/* animación de entrada */
+@keyframes shipIn{
+  from{
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to{
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ship-mobile .mi-row{
+  display: block !important;
+  font-size: 12px;
+  line-height: 1.15;
+  font-weight: 900;
+  text-align: center;
+}
+@media (max-width: 520px){
+
+  /* el banner: sin márgenes raros */
+  #mobileInfo{
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .ship-mobile{
+    margin: 0 !important;
+  }
+
+  /* el espacio casi seguro viene del hero o del wrapper */
+  .hero{
+    margin-top: 6px !important;     /* pegado al banner */
+  }
+
+  /* si sigue separado, es padding del hero */
+  .hero{
+    padding-top: 0 !important;
+  }
+
+  /* plan C: si el gap viene de un contenedor flex/grid */
+  .content, .main, .page, .container{
+    gap: 6px !important;
+  }
+}
 
 /* Responsive */
 @media (max-width: 900px){
