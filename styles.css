@@ -566,46 +566,51 @@ textarea{ min-height:90px; resize:vertical; }
 }
 .total-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .total{ font-weight:1000; font-size:18px; }
-/* CONTACTO como botón WhatsApp */
+/* Botón WhatsApp dentro de la card */
 .contact-row{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #25D366;
-  border-radius: 14px;
-  padding: 12px 14px;
-  cursor: pointer;
-  box-shadow: 0 12px 26px rgba(37,211,102,.30);
-  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+
+  background:#eafff1;                 /* verde suave */
+  border:1px solid rgba(37,211,102,.45);
+  box-shadow: 0 6px 14px rgba(0,0,0,.06);
+
+  cursor:pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
 
 .contact-row:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 16px 34px rgba(37,211,102,.38);
-  filter: brightness(1.02);
+  background:#dfffea;
+  box-shadow: 0 10px 20px rgba(0,0,0,.08);
 }
 
 .contact-row:active{
-  transform: translateY(0);
-  box-shadow: 0 8px 18px rgba(37,211,102,.22);
+  transform: scale(.99);
 }
 
-.contact-row a{
-  color: #fff;
-  font-weight: 900;
-  font-size: 15px;
-  text-decoration: none;
-}
-
-.contact-row a:hover{
-  text-decoration: none;
-}
-
+/* icono normal (sin filtro) */
 .wa-icon{
-  width: 20px;
-  height: 20px;
-  filter: brightness(0) invert(1); /* icono blanco */
+  width:22px;
+  height:22px;
+  flex: 0 0 22px;
 }
+
+/* link como texto de acción */
+.contact-row a{
+  color:#0b5d2a;
+  font-weight:900;
+  font-size:15px;
+  text-decoration:none;
+  line-height:1;
+}
+
+/* opcional: que al tocar cualquier parte, parezca link */
+.contact-row a:focus{ outline:none; }
+
 /* Botón WhatsApp en detalle de producto */
 .wa-consult{
   display: flex;
