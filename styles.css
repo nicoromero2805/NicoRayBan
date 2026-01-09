@@ -836,4 +836,20 @@ textarea{ min-height:90px; resize:vertical; }
     white-space: nowrap;
   }
 }
+/* 📱 Mobile: thumbs en 2 filas para que NO quede ninguna cortada */
+@media (max-width: 520px){
+  .pm-thumbs{
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr); /* 4 por fila */
+    gap: 10px;
+    overflow: visible !important;
+    padding: 10px 12px 0;
+  }
+
+  .pm-thumb{
+    width: auto;         /* que lo maneje la grilla */
+    height: 62px;        /* un poquito más compacto */
+  }
+}
+
 
