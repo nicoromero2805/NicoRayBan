@@ -191,14 +191,9 @@ def products():
 
         desc = (it.get("description") or "").lower()
                                 
-        it["price"] = precio_polarizado if "polarizado" in desc else Precio_lentes
-             
-                                       
-                
-                                        
-                    
-                                                   
-                                        
+        it["price"] = precio_polarizado if (
+        "polarizado" in desc or "ferrari" in desc or "scuderia" in desc
+        ) else Precio_lentes
 
     return {
         "count": len(items),
