@@ -75,15 +75,29 @@ function moneyARS(n){
 function inferCategory(desc){
   const t = String(desc || "").trim().toUpperCase();
   if(!t) return "OTROS";
+
+  // Casos especiales que ya tenías
+  if (t.startsWith("THE JA")) return "THE JA-JO";
+  if (t.startsWith("THE ")) {
+    const parts = t.split(/\s+/);
+    return parts[1] ? `THE ${parts[1]}` : "THE";
+  }
+  if (t.startsWith("BIL ") || t.startsWith("BILL ")) return "BILL";
+
+  // ✅ Prioridades por keyword (no por primera palabra)
+  // Si aparece FERRARI en cualquier parte, categorizá como FERRARI
+  if (t.includes("FERRARI") || t.includes("SCUDERIA")) return "FERRARI";
+
+  // Cat eye / cats
+  if (t.includes("CAT EYE")) return "CAT EYE";
+  if (t.includes("CAT 5000")) return "CAT 5000";
+  if (t.includes("CAT") && !t.includes("CATCH")) return "CAT EYE"; // opcional
+
+  // Si no matchea nada, cae a la primera palabra (como antes)
   const parts = t.split(/\s+/);
-  if (parts[0] === "THE" && parts[1] === "JA") return "THE JA-JO";
-  if (parts[0] === "THE" && parts[1]) return `THE ${parts[1]}`;
-  if (parts[0] === "BIL" || parts[0] === "BILL") return "BILL";
-  if (parts[0] === "FERRARI" || parts[0] === "SCUDERIA") return "FERRARI";
-  if (parts[0] === "CAT") return "CAT EYE";
-  if (parts[0] === "CATS") return "CAT 5000";
-  return parts[0];
+  return parts[0] || "OTROS";
 }
+
 
 function loadCart(){
   try{ CART = JSON.parse(localStorage.getItem(CART_KEY) || "{}") || {}; }
