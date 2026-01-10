@@ -939,6 +939,12 @@ textarea{ min-height:90px; resize:vertical; }
     gap: 6px !important;
   }
 }
+.pm-tech-line{
+  margin: 8px 0 12px 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #444;
+}
 
 /* Responsive */
 @media (max-width: 900px){
