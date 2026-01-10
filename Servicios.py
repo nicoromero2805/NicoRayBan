@@ -115,6 +115,12 @@ def _load_df():
     stock_col = _pick_col(df, "Stock", "STOCK", "stock")
     desc_col = _pick_col(df, "Descripción_modelo", "Descripcion_modelo", "Descripción", "Descripcion", "Modelo")
 
+     # 👉 Ficha técnica
+    talle_col = _pick_col(df, "Talle")
+    lente_ancho_alto_col = _pick_col(df, "Lente ancho/alto_(mm)", "Lente ancho/alto (mm)", "Lente_ancho_alto_mm")
+    puente_col = _pick_col(df, "Puente_(mm)", "Puente (mm)", "Puente_mm")
+    varilla_col = _pick_col(df, "Varilla_(mm)", "Varilla (mm)", "Varilla_mm")
+
     if not sku_col or not stock_col:
         raise HTTPException(status_code=500, detail={
             "error": "No pude identificar columnas SKU/Stock",
@@ -125,26 +131,51 @@ def _load_df():
         df["__desc__"] = ""
         desc_col = "__desc__"
 
+                    
     df[sku_col] = df[sku_col].astype(str).str.strip()
     df[desc_col] = df[desc_col].astype(str).str.strip()
     df[stock_col] = pd.to_numeric(df[stock_col], errors="coerce").fillna(0).astype(int)
 
     df = df[df[sku_col].astype(str).str.len() > 0]
 
+    def col_or_empty(col):
+        if col and col in df.columns:
+            return df[col].astype(str).fillna("").str.strip()
+        return ""
+
     out = pd.DataFrame({
         "sku": df[sku_col],
         "description": df[desc_col],
         "stock": df[stock_col],
+
+        "talle": col_or_empty(talle_col),
+        "lente_mm": col_or_empty(lente_ancho_alto_col),
+        "puente_mm": col_or_empty(puente_col),
+        "varilla_mm": col_or_empty(varilla_col),
     })
 
-    out = out.groupby(["sku", "description"], as_index=False)["stock"].max()
+    def first_non_empty(s):
+        s = s.astype(str).str.strip()
+        s = s[s != ""]
+        return s.iloc[0] if len(s) else ""
+
+    out = out.groupby("sku", as_index=False).agg({
+        "description": first_non_empty,
+        "stock": "max",
+        "talle": first_non_empty,
+        "lente_mm": first_non_empty,
+        "puente_mm": first_non_empty,
+        "varilla_mm": first_non_empty,
+    })
 
     return out, header_row, list(df.columns)
+
 
 
 # =========================
 # Endpoints
 # =========================
+
 
 @app.get("/products")
 def products():
@@ -159,7 +190,15 @@ def products():
         it["gallery"] = imgs
 
         desc = (it.get("description") or "").lower()
+                                
         it["price"] = precio_polarizado if "polarizado" in desc else Precio_lentes
+             
+                                       
+                
+                                        
+                    
+                                                   
+                                        
 
     return {
         "count": len(items),
@@ -167,6 +206,7 @@ def products():
         "columns": columns,
         "items": items
     }
+
 
 @app.get("/stock/{sku}")
 def stock_by_sku(sku: str):
