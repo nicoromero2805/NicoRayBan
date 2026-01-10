@@ -321,6 +321,36 @@ function openProduct(sku){
   $("pmSub").textContent = `SKU: ${p.sku}`;
   $("pmCat").textContent = cat;
   $("pmDesc").textContent = p.description || "";
+	// ===== Ficha técnica en una línea =====
+const talle   = String(p.talle || "").trim();
+let lente     = String(p.lente_mm || "").trim();
+const puente  = String(p.puente_mm || "").trim();
+const varilla = String(p.varilla_mm || "").trim();
+
+// Convertir "58/50" → "58×50"
+if(lente.includes("/")){
+  const parts = lente.split("/");
+  if(parts.length === 2){
+    lente = parts[0] + "×" + parts[1];
+  }
+}
+
+const techParts = [];
+if(talle)   techParts.push(`Talle ${talle}`);
+if(lente)   techParts.push(`Lente ${lente} mm`);
+if(puente)  techParts.push(`Puente ${puente} mm`);
+if(varilla) techParts.push(`Patilla ${varilla} mm`);
+
+const techBox = $("pmTech");
+if(techBox){
+  if(techParts.length){
+    techBox.style.display = "block";
+    $("pmTechText").textContent = techParts.join(" · ");
+  }else{
+    techBox.style.display = "none";
+  }
+}
+
   $("pmStockPill").textContent = `Stock: ${stock}`;
   $("pmPrice").textContent = moneyARS(p.price);
 
