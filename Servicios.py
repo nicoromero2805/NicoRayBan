@@ -12,6 +12,15 @@ app = FastAPI(title="Servicios Lentes")
 # ✅ Variables modificables (precios)
 Precio_lentes = 125000
 precio_polarizado = 135000
+import time
+
+_CACHE = {
+    "products": None,
+    "ts": 0
+}
+
+CACHE_SECONDS = 300
+
 app.mount("/static", StaticFiles(directory="."), name="static")
 @app.get("/")
 def home():
@@ -179,28 +188,40 @@ def _load_df():
 
 @app.get("/products")
 def products():
+    now = time.time()
+
+    # Si el cache es válido, lo devolvemos
+    if _CACHE["products"] and (now - _CACHE["ts"]) < CACHE_SECONDS:
+        return _CACHE["products"]
+
+    # Si no hay cache o expiró, recalculamos
     out, header_row, columns = _load_df()
     items = out.to_dict(orient="records")
 
-    # Agregar imágenes desde images_map.py
     for it in items:
         raw_imgs = IMAGES.get(it["sku"], [])
         imgs = [drive_view_to_direct(u) for u in raw_imgs]
         it["foto_url"] = imgs[0] if imgs else None
         it["gallery"] = imgs
 
-        desc = (it.get("description") or "").lower()
-                                
-        it["price"] = precio_polarizado if (
-        "polarizado" in desc or "ferrari" in desc or "scuderia" in desc
-        ) else Precio_lentes
+        desc = (it["description"] or "").lower()
+        if "polarizado" in desc or "ferrari" in desc or "scuderia" in desc:
+            it["price"] = precio_polarizado
+        else:
+            it["price"] = Precio_lentes
 
-    return {
+    payload = {
         "count": len(items),
         "header_row": header_row,
         "columns": columns,
         "items": items
     }
+
+    # Guardamos cache
+    _CACHE["products"] = payload
+    _CACHE["ts"] = now
+
+    return payload
 
 
 @app.get("/stock/{sku}")
