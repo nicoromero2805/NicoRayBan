@@ -770,11 +770,14 @@ textarea{ min-height:90px; resize:vertical; }
   display: grid;
   place-items: center;
 
-  background: transparent;     /* 👈 importante */
+  background: rgba(0,0,0,0.001);   /* 👈 FIX mobile */
   box-shadow: 0 14px 30px rgba(0,0,0,.22);
 
   cursor: pointer;
   transition: transform .15s ease, box-shadow .15s ease;
+
+  -webkit-tap-highlight-color: transparent; /* 👈 FIX iOS */
+  touch-action: manipulation;              /* 👈 FIX Android */
 }
 
 .wa-float:hover{
