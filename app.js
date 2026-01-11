@@ -380,6 +380,7 @@ if(techBox){
 
   $("backdrop").classList.remove("hidden");
   $("pmodal").classList.remove("hidden");
+ document.body.classList.add("ui-overlay-open");
 }
 window.openProduct = openProduct;
 
@@ -388,15 +389,18 @@ function closeProduct(){
   $("pmodal").classList.add("hidden");
   PM_SKU = null;
   PM_GALLERY = [];
+  document.body.classList.remove("ui-overlay-open");
 }
 
 /* Cart drawer */
 function openCart(){
   $("cartDrawer").classList.add("open");
   renderCart();
+  document.body.classList.add("ui-overlay-open");
 }
 function closeCart(){
   $("cartDrawer").classList.remove("open");
+  document.body.classList.remove("ui-overlay-open");
 }
 function goStep(step){
   const isCart = step === "cart";
