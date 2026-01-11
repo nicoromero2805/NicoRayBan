@@ -388,6 +388,7 @@ function closeProduct(){
   $("pmodal").classList.add("hidden");
   PM_SKU = null;
   PM_GALLERY = [];
+  PM_PRODUCT = null; // ✅ importante: vuelve al mensaje genérico
 }
 
 /* Cart drawer */
