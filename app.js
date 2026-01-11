@@ -388,7 +388,6 @@ function closeProduct(){
   $("pmodal").classList.add("hidden");
   PM_SKU = null;
   PM_GALLERY = [];
-  PM_PRODUCT = null; // ✅ importante: vuelve al mensaje genérico
 }
 
 /* Cart drawer */
@@ -740,25 +739,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("meta").textContent = "Error cargando /products: " + err.message;
   }
 });
-
-function buildFloatWhatsAppMessage(){
-  if(!PM_PRODUCT){
-    return "Hola Nico! Quiero hacerte una consulta sobre los lentes Ray-Ban";
-  }
-
-  const desc = String(PM_PRODUCT.description || "").trim();
-  const price = moneyARS(PM_PRODUCT.price);
-
-  return `Hola Nico! Tengo una consulta sobre este lente:\n${desc}\nPrecio: ${price}`;
-}
-
-const waFloat = document.getElementById("waFloat");
-if(waFloat){
-  waFloat.addEventListener("click", (e) => {
-    e.preventDefault();
-    const msg = buildFloatWhatsAppMessage();
-    const url = `https://wa.me/${encodeURIComponent(WHATSAPP_NUMBER)}?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  });
-}
-
