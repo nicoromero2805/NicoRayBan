@@ -12,6 +12,17 @@ app = FastAPI(title="Servicios Lentes")
 # ✅ Variables modificables (precios)
 Precio_lentes = 125000
 precio_polarizado = 135000
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+def health():
+    # Endpoint simple para "mantener vivo" el servicio y monitorear estado
+    # Podés agregar checks (DB, Redis, etc.) si querés, pero cuanto más liviano mejor.
+    return {"status": "ok"}
+
 import time
 
 _CACHE = {
