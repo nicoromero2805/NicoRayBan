@@ -945,6 +945,28 @@ textarea{ min-height:90px; resize:vertical; }
   font-weight: 800;
   color: #444;
 }
+.pm-paybreak{
+  margin-top: 10px;
+  font-size: 13px;
+  display: grid;
+  gap: 6px;
+  color: #444;
+}
+
+.pm-paybreak .pm-line{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.04);
+}
+
+.pm-paybreak .pm-line b{
+  color:#111;
+  font-weight: 800;
+}
+
 
 /* Responsive */
 @media (max-width: 900px){
