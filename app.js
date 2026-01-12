@@ -18,7 +18,11 @@ let PM_SKU = null;
 let PM_GALLERY = [];
 let PM_PRODUCT = null;
 //let ACTIVE_PRODUCT = null;
-
+const COEF_MP_1P = 145 / 135; // 1.074074...
+const COEF_MP_3P = 165 / 135; // 1.222222...
+function floorToThousand(n){
+  return Math.floor(Number(n||0) / 1000) * 1000;
+}
 function $(id){ return document.getElementById(id); }
 
 // =========================
@@ -353,7 +357,12 @@ if(techBox){
 
   $("pmStockPill").textContent = `Stock: ${stock}`;
   $("pmPrice").textContent = moneyARS(p.price);
-
+	const base = Number(p.price || 0); // transferencia
+	const p1 = floorToThousand(base * COEF_MP_1P);
+	const p3 = floorToThousand(base * COEF_MP_3P);
+	$("pmPriceTransfer").textContent = moneyARS(base);
+	$("pmPrice1p").textContent = moneyARS(p1);
+	$("pmPrice3p").textContent = moneyARS(p3);
   const main = $("pmImg");
   main.src = PM_GALLERY[0] || "";
 
