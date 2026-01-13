@@ -10,7 +10,7 @@ const WHATSAPP_NUMBER = "5493512070090";
 const SHIPPING_COST = 0; // Costo envio
 const CART_KEY = "lentes_cart_v2";
 let ALL = [];
-let ACTIVE_CATEGORY = "FERRARI"; // Para iniciar en una categoria Colocamos la categoria que queremos , sino ponemos INICIO y CARGA TODOS
+let ACTIVE_CATEGORY = "INICIO"; // Para iniciar en una categoria Colocamos la categoria que queremos , sino ponemos INICIO y CARGA TODOS
 let VIEW_MODE = "grid"; // grid | list
 let CART = {}; // sku -> {sku, description, qty}
 
@@ -100,6 +100,49 @@ function inferCategory(desc){
   // Si no matchea nada, cae a la primera palabra (como antes)
   const parts = t.split(/\s+/);
   return parts[0] || "OTROS";
+}
+// ================= PRIORIDAD POR SKU (INICIO) =================
+
+// 1) SKUs destacados en el orden exacto
+const PRIORITY_SKU_GROUPS = [
+  // Ferrari
+  ["100331", "100359", "100258"],
+
+  // CAT EYE
+  ["100303", "100303"],
+
+  // Bill
+  ["100526", "100512"]
+];
+
+// 2) Mapa SKU → prioridad
+const SKU_PRIORITY = new Map();
+(function buildSkuPriority(){
+  let pos = 0;
+  for (const group of PRIORITY_SKU_GROUPS){
+    for (const sku of group){
+      const s = String(sku);
+      if (!SKU_PRIORITY.has(s)) {
+        SKU_PRIORITY.set(s, pos++);
+      }
+    }
+  }
+})();
+
+// 3) Sort: prioritarios primero, resto alfabético
+function skuPrioritySort(a, b){
+  const sa = String(a.sku ?? "");
+  const sb = String(b.sku ?? "");
+
+  const pa = SKU_PRIORITY.has(sa) ? SKU_PRIORITY.get(sa) : 999999;
+  const pb = SKU_PRIORITY.has(sb) ? SKU_PRIORITY.get(sb) : 999999;
+
+  if (pa !== pb) return pa - pb;
+
+  // Resto ordenado alfabéticamente
+  const ka = String(a.description || sa);
+  const kb = String(b.description || sb);
+  return ka.localeCompare(kb, "es");
 }
 
 
@@ -236,10 +279,15 @@ window.removeFromCart = removeFromCart;
 function getQuery(){ return ($("q").value || "").trim().toLowerCase(); }
 
 function applyFilters(){
-  let items = ALL;
-  if(ACTIVE_CATEGORY !== "INICIO"){
+  let items = ALL.slice();
+
+  if (ACTIVE_CATEGORY !== "INICIO") {
     items = items.filter(p => p._category === ACTIVE_CATEGORY);
+  } else {
+    // ✅ INICIO: orden por prioridad de SKU
+    items.sort(skuPrioritySort);
   }
+
   const q = getQuery();
   if(q){
     items = items.filter(p => {
@@ -248,6 +296,7 @@ function applyFilters(){
       return sku.includes(q) || desc.includes(q);
     });
   }
+
   $("meta").textContent = `Productos: ${items.length} / ${ALL.length}`;
 
   if(VIEW_MODE === "grid"){
@@ -260,6 +309,7 @@ function applyFilters(){
     renderList(items);
   }
 }
+
 
 function mainImage(p){
   const g = Array.isArray(p.gallery) ? p.gallery : [];
