@@ -36,6 +36,11 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 @app.get("/")
 def home():
     return FileResponse("index.html")
+
+@app.get("/fecha")
+@app.get("/fecha/")
+def fecha():
+    return FileResponse("fecha/index.html")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
