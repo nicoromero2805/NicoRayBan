@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#eef8f4">
 
   <!-- Neutro para no arruinar la sorpresa al compartir el link -->
-  <title>Reserva la Fecha</title>
+  <title>Reserva la fecha</title>
   <meta name="description" content="Tenemos algo importante para compartir con vos ❤️">
   <meta property="og:title" content="Reserva la Fecha">
   <meta property="og:description" content="Tenemos algo importante para compartir con vos ❤️">
@@ -147,8 +147,8 @@
       transform-origin:top center;
       transform-style:preserve-3d;
       transition:
-        transform .95s cubic-bezier(.18,.76,.12,1),
-        opacity .22s ease .66s;
+        transform 1.55s cubic-bezier(.18,.76,.12,1),
+        opacity .35s ease 1.12s;
     }
 
     .inside {
@@ -156,8 +156,8 @@
       opacity:0;
       transform:translateY(8px) scale(.97);
       transition:
-        opacity .4s ease .42s,
-        transform .55s cubic-bezier(.2,.74,.2,1) .34s;
+        opacity .75s ease .95s,
+        transform .95s cubic-bezier(.2,.74,.2,1) .82s;
     }
 
     .invite.open .cover {
@@ -445,6 +445,43 @@
     }
 
 
+
+    /* Cuenta regresiva antes de abrir */
+    .countdown {
+      position:fixed;
+      inset:0;
+      z-index:80;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+      opacity:0;
+      visibility:hidden;
+      background:rgba(238,248,244,.18);
+      backdrop-filter:blur(2px);
+      transition:opacity .25s ease;
+    }
+
+    .countdown.show {
+      opacity:1;
+      visibility:visible;
+    }
+
+    .countdown-number {
+      font-family:"Water Brush","Brush Script MT",cursive;
+      color:var(--mint-dark);
+      font-size:clamp(100px,19vw,220px);
+      line-height:1;
+      text-shadow:0 10px 30px rgba(57,94,81,.12);
+      animation:count-pop .72s cubic-bezier(.18,.76,.12,1);
+    }
+
+    @keyframes count-pop {
+      0%   { opacity:0; transform:scale(.58); }
+      28%  { opacity:1; transform:scale(1.08); }
+      72%  { opacity:1; transform:scale(1); }
+      100% { opacity:0; transform:scale(1.22); }
+    }
+
     /* Papelitos sutiles al abrir */
     .confetti-piece {
       position: fixed;
@@ -476,6 +513,9 @@
 </head>
 
 <body>
+  <div class="countdown" id="countdown" aria-hidden="true">
+    <div class="countdown-number" id="countdownNumber">3</div>
+  </div>
   <div class="ambient" aria-hidden="true">
     <div class="blob one"></div>
     <div class="blob two"></div>
@@ -573,7 +613,7 @@
       : 'Tocá la tarjeta para abrirla 💌';
 
     if (open) {
-      setTimeout(throwPapelitos, 560);
+      setTimeout(throwPapelitos, 1250);
     }
 
     if (open && window.innerWidth < 760) {
@@ -581,8 +621,40 @@
     }
   }
 
+  const countdown = document.getElementById('countdown');
+  const countdownNumber = document.getElementById('countdownNumber');
+  let counting = false;
+
+  function animateNumber(value) {
+    countdownNumber.textContent = value;
+    countdownNumber.style.animation = 'none';
+    void countdownNumber.offsetWidth;
+    countdownNumber.style.animation = 'count-pop .72s cubic-bezier(.18,.76,.12,1)';
+  }
+
+  function startCountdown() {
+    if (counting) return;
+    counting = true;
+    countdown.classList.add('show');
+
+    animateNumber('3');
+
+    setTimeout(() => animateNumber('2'), 850);
+    setTimeout(() => animateNumber('1'), 1700);
+
+    setTimeout(() => {
+      countdown.classList.remove('show');
+      setOpen(true);
+      counting = false;
+    }, 2550);
+  }
+
   clickLayer.addEventListener('click', () => {
-    setOpen(!invite.classList.contains('open'));
+    if (invite.classList.contains('open')) {
+      setOpen(false);
+      return;
+    }
+    startCountdown();
   });
 </script>
 </body>
