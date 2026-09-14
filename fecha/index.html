@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7fbf9">
+<title>Reserva la Fecha</title>
+
+<!--
+  Tipografía:
+  El diseño original usa una brush-script del estilo "Playlist Script".
+  Como esa fuente no es una webfont libre estándar, uso "Water Brush",
+  una alternativa muy cercana disponible en Google Fonts.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Water+Brush&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --mint:#92d9c1;
+  --pink:#ff7090;
+  --paper:#fbfdfc;
+  --ink:#626766;
+  --shadow:rgba(30,70,58,.18);
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:
+    radial-gradient(circle at 50% -10%, #fff 0 28%, transparent 58%),
+    linear-gradient(145deg,#f9fcfb,#eef8f4);
+  color:var(--ink);
+  font-family:"Montserrat",system-ui,sans-serif;
+}
+
+body{
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:
+    max(14px,env(safe-area-inset-top))
+    max(12px,env(safe-area-inset-right))
+    max(18px,env(safe-area-inset-bottom))
+    max(12px,env(safe-area-inset-left));
+}
+
+.app{
+  width:min(100%,980px);
+  text-align:center;
+}
+
+.helper{
+  margin:0 0 14px;
+  font-size:clamp(13px,1.8vw,17px);
+  font-weight:300;
+  letter-spacing:.03em;
+  opacity:.72;
+}
+
+.scene{
+  width:100%;
+  perspective:1800px;
+}
+
+.card{
+  position:relative;
+  width:100%;
+  aspect-ratio:892/541;
+  margin:auto;
+  transform-style:preserve-3d;
+  border-radius:clamp(12px,2vw,22px);
+  filter:drop-shadow(0 22px 38px var(--shadow));
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.face{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  border-radius:inherit;
+  background:var(--paper);
+  border:1px solid rgba(94,167,144,.12);
+  backface-visibility:hidden;
+}
+
+.inside{
+  z-index:1;
+  opacity:0;
+  transform:scale(.96);
+  transition:
+    opacity .38s ease .43s,
+    transform .52s cubic-bezier(.2,.75,.2,1) .35s;
+}
+
+.cover{
+  z-index:2;
+  transform-origin:top center;
+  transform-style:preserve-3d;
+  transition:
+    transform .9s cubic-bezier(.18,.76,.16,1),
+    opacity .2s linear .64s;
+  box-shadow:0 18px 40px rgba(20,50,42,.12);
+}
+
+.cover::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(to bottom,transparent 55%,rgba(28,58,48,.12));
+  opacity:0;
+  transition:opacity .55s ease;
+}
+
+.card.open .cover{
+  transform:rotateX(105deg) translateY(-2%);
+  opacity:0;
+  pointer-events:none;
+}
+
+.card.open .cover::after{opacity:1}
+
+.card.open .inside{
+  opacity:1;
+  transform:scale(1);
+}
+
+/* ---------- shared design ---------- */
+
+.script{
+  font-family:"Water Brush","Brush Script MT",cursive;
+  color:var(--mint);
+  line-height:.83;
+  font-weight:400;
+}
+
+.date{
+  position:absolute;
+  left:50%;
+  bottom:7.8%;
+  transform:translateX(-50%);
+  font-size:clamp(12px,2.05vw,29px);
+  font-weight:300;
+  letter-spacing:.34em;
+  white-space:nowrap;
+  color:#666b69;
+}
+
+.heart{
+  position:absolute;
+  background:var(--pink);
+  transform:rotate(-45deg);
+}
+
+.heart::before,
+.heart::after{
+  content:"";
+  position:absolute;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:inherit;
+}
+
+.heart::before{top:-50%;left:0}
+.heart::after{left:50%;top:0}
+
+/* ---------- portada ---------- */
+
+.cover-main{
+  position:absolute;
+  inset:0;
+}
+
+.reserve{
+  position:absolute;
+  left:11%;
+  top:7%;
+  font-size:clamp(53px,12.8vw,178px);
+  white-space:nowrap;
+  transform:rotate(-2deg);
+}
+
+.la-fecha{
+  position:absolute;
+  left:29%;
+  top:43%;
+  font-size:clamp(56px,13.3vw,184px);
+  white-space:nowrap;
+  transform:rotate(-1deg);
+}
+
+.cover .h1{
+  width:5.3%;
+  aspect-ratio:1;
+  right:21.5%;
+  top:16.5%;
+}
+.cover .h2{
+  width:8.6%;
+  aspect-ratio:1;
+  right:8.8%;
+  top:23%;
+}
+
+/* ---------- interior ---------- */
+
+.inside-grid{
+  position:absolute;
+  inset:0;
+}
+
+.family{
+  position:absolute;
+  left:3.2%;
+  top:7%;
+  width:54%;
+  text-align:center;
+  font-size:clamp(42px,8.7vw,121px);
+  line-height:.88;
+  transform:rotate(-2deg);
+}
+
+.family .line2{
+  display:block;
+  margin-top:7%;
+}
+
+.baby{
+  position:absolute;
+  right:5.2%;
+  top:25%;
+  width:35%;
+  text-align:center;
+  font-size:clamp(37px,7.1vw,98px);
+  line-height:.98;
+  transform:rotate(-2deg);
+}
+
+.baby span{
+  display:block;
+  margin-top:10%;
+}
+
+.inside .h1{
+  width:4.2%;
+  aspect-ratio:1;
+  right:16.2%;
+  top:13.5%;
+}
+.inside .h2{
+  width:7.1%;
+  aspect-ratio:1;
+  right:7.7%;
+  top:21.5%;
+}
+
+/* invisible accessible button */
+.toggle{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  border:0;
+  padding:0;
+  background:transparent;
+  cursor:pointer;
+  border-radius:inherit;
+}
+
+.toggle:focus-visible{
+  outline:3px solid rgba(116,202,174,.8);
+  outline-offset:5px;
+}
+
+.footer{
+  margin-top:13px;
+  min-height:18px;
+  font-size:clamp(11px,1.6vw,14px);
+  font-weight:300;
+  opacity:.52;
+}
+
+/* Phones: keep exact composition but maximize readable area */
+@media(max-width:640px){
+  body{
+    padding-left:8px;
+    padding-right:8px;
+  }
+
+  .app{width:100%}
+
+  .card{
+    width:100%;
+    border-radius:12px;
+  }
+
+  .reserve{font-size:19vw}
+  .la-fecha{font-size:19.6vw}
+
+  .family{font-size:13.2vw}
+  .baby{font-size:10.8vw}
+
+  .date{
+    font-size:2.7vw;
+    letter-spacing:.28em;
+  }
+}
+
+/* Very wide / short screens, e.g. phones in landscape */
+@media(max-height:520px) and (orientation:landscape){
+  body{
+    display:block;
+    padding-top:8px;
+  }
+
+  .app{
+    width:min(88vw,850px);
+    margin:auto;
+  }
+
+  .helper{
+    margin-bottom:6px;
+    font-size:12px;
+  }
+
+  .footer{
+    margin-top:6px;
+    font-size:11px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .cover,.inside{transition:none!important}
+}
+</style>
+</head>
+
+<body>
+<main class="app">
+  <p class="helper" id="helper">Tocá la tarjeta para abrirla 💌</p>
+
+  <div class="scene">
+    <article class="card" id="card">
+
+      <!-- INTERIOR: texto real, no imagen -->
+      <section class="face inside" aria-label="Se agranda la familia. Bebé en camino.">
+        <div class="inside-grid">
+          <div class="script family">
+            Se agranda la
+            <span class="line2">familia...</span>
+          </div>
+
+          <div class="script baby">
+            Bebé en
+            <span>camino</span>
+          </div>
+
+          <i class="heart h1" aria-hidden="true"></i>
+          <i class="heart h2" aria-hidden="true"></i>
+        </div>
+      </section>
+
+      <!-- PORTADA: texto real, no imagen -->
+      <section class="face cover" aria-label="Reserva la Fecha. Marzo 2027.">
+        <div class="cover-main">
+          <div class="script reserve">Reserva</div>
+          <div class="script la-fecha">la fecha</div>
+
+          <i class="heart h1" aria-hidden="true"></i>
+          <i class="heart h2" aria-hidden="true"></i>
+
+          <div class="date">MARZO 2027</div>
+        </div>
+      </section>
+
+      <button class="toggle" id="toggle"
+              aria-label="Abrir invitación"
+              aria-pressed="false"></button>
+    </article>
+  </div>
+
+  <div class="footer" id="footer">Volvé a tocar para cerrar</div>
+</main>
+
+<script>
+const card = document.getElementById("card");
+const toggle = document.getElementById("toggle");
+const helper = document.getElementById("helper");
+const footer = document.getElementById("footer");
+
+function setOpen(open){
+  card.classList.toggle("open",open);
+  toggle.setAttribute("aria-pressed",String(open));
+  toggle.setAttribute("aria-label",open ? "Cerrar invitación" : "Abrir invitación");
+  helper.textContent = open ? "❤️" : "Tocá la tarjeta para abrirla 💌";
+  footer.textContent = open ? "Tocá nuevamente para volver a la portada" : "Volvé a tocar para cerrar";
+}
+
+toggle.addEventListener("click",()=>{
+  setOpen(!card.classList.contains("open"));
+});
+</script>
+</body>
+</html>
