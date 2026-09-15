@@ -40,7 +40,7 @@ def home():
 @app.get("/fecha")
 @app.get("/fecha/")
 def fecha():
-    return FileResponse("fecha/index2.html") # Comento por un archivo que no existe para que no vean el index original
+    return FileResponse("fecha/index.html") # Comento por un archivo que no existe para que no vean el index original
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
