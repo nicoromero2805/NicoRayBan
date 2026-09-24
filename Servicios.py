@@ -48,6 +48,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/revelacion")
+@app.get("/revelacion/")
+def revelacion():
+    return FileResponse("revelacion/index.html")
+
 # =========================
 # Google Sheet
 # =========================
