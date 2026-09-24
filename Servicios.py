@@ -48,10 +48,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/revelacion")
-@app.get("/revelacion/")
-def revelacion():
-    return FileResponse("revelacion/index.html")
+# =========================
+# Revelacion
+# =========================
+app.mount(
+    "/revelacion",
+    StaticFiles(directory="revelacion", html=True),
+    name="revelacion"
+)
 
 # =========================
 # Google Sheet
