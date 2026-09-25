@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fff9f7">
+  <title>¿Niño o Niña? · Nuestra predicción</title>
+  <meta name="description" content="Dejá tu predicción: ¿niño o niña?">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card" aria-labelledby="title">
+      <div class="sparkle" aria-hidden="true">✦</div>
+      <p class="eyebrow">UNA PEQUEÑA APUESTA</p>
+      <h1 id="title">¿Qué pensás que es?</h1>
+      <p class="intro">Antes de descubrirlo, queremos conocer tu predicción.</p>
+
+      <form id="voteForm" novalidate>
+        <label class="field-label" for="name">¿Cómo te llamás?</label>
+        <input id="name" name="name" maxlength="60" autocomplete="name"
+               placeholder="Ingresá tu nombre" required>
+
+        <fieldset>
+          <legend>¿Cuál es tu predicción?</legend>
+          <div class="choices">
+            <label class="choice girl">
+              <input type="radio" name="vote" value="NINA">
+              <span class="choice-card">
+                <span class="choice-icon" aria-hidden="true">♡</span>
+                <strong>Niña</strong>
+                <small>Team rosa</small>
+                <span class="check">✓</span>
+              </span>
+            </label>
+
+            <label class="choice boy">
+              <input type="radio" name="vote" value="NINO">
+              <span class="choice-card">
+                <span class="choice-icon" aria-hidden="true">☆</span>
+                <strong>Niño</strong>
+                <small>Team azul</small>
+                <span class="check">✓</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="baby-name-field">
+          <label class="field-label" for="babyName">¿Y qué nombre le pondrías? 👶</label>
+          <input id="babyName" name="babyName" maxlength="100"
+                 placeholder="Sugerí un nombre para el bebé">
+          <small class="optional">Opcional</small>
+        </div>
+
+        <p id="formError" class="error" role="alert"></p>
+        <button id="submitBtn" class="primary" type="submit">Confirmar mi predicción</button>
+      </form>
+
+      <section id="results" class="results" hidden aria-live="polite">
+        <div class="divider"></div>
+        <p class="result-kicker">ASÍ VIENEN LAS PREDICCIONES</p>
+        <h2>¡Tu voto cuenta!</h2>
+
+        <div class="donut-wrap">
+          <div id="donut" class="donut" role="img" aria-label="Resultados de la votación">
+            <div class="donut-center">
+              <strong id="totalVotes">0</strong>
+              <span>votos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div><span class="dot pink"></span><span>Niña</span><strong id="girlPct">0%</strong></div>
+          <div><span class="dot blue"></span><span>Niño</span><strong id="boyPct">0%</strong></div>
+        </div>
+
+        <section class="names-section" aria-labelledby="namesTitle">
+          <div class="names-header">
+            <span class="baby-icon" aria-hidden="true">👶</span>
+            <div>
+              <p class="names-kicker">PROPUESTAS</p>
+              <h3 id="namesTitle">Nombres que propone la gente</h3>
+            </div>
+          </div>
+          <div id="namesEmpty" class="names-empty">Todavía no hay nombres propuestos.</div>
+          <div id="namesList" class="names-list" aria-live="polite"></div>
+        </section>
+
+        <button id="changeVote" class="secondary" type="button">Cambiar mi predicción o propuesta</button>
+      </section>
+    </section>
+    <p class="footer">Hecho con amor para una espera muy especial ♡</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
