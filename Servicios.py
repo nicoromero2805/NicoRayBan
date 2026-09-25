@@ -59,11 +59,11 @@ app.mount(
 # =========================
 # Revelacion
 # =========================
-app.mount(
-    "/revelacion-v2",
-    StaticFiles(directory="revelacion-v2", html=True),
-    name="revelacion-v2"
-)
+#app.mount(
+#    "/revelacion-v2",
+#    StaticFiles(directory="revelacion-v2", html=True),
+#    name="revelacion-v2"
+#)
 
 # =========================
 # Google Sheet

@@ -20,7 +20,7 @@
       <form id="voteForm" novalidate>
         <label class="field-label" for="name">¿Cómo te llamás?</label>
         <input id="name" name="name" maxlength="60" autocomplete="name"
-               placeholder="Tu nombre" required>
+               placeholder="Ingresá tu nombre" required>
 
         <fieldset>
           <legend>¿Cuál es tu predicción?</legend>
@@ -47,8 +47,15 @@
           </div>
         </fieldset>
 
+        <div class="baby-name-field">
+          <label class="field-label" for="babyName">¿Y qué nombre le pondrías? 👶</label>
+          <input id="babyName" name="babyName" maxlength="100"
+                 placeholder="Sugerí un nombre para el bebé">
+          <small class="optional">Opcional</small>
+        </div>
+
         <p id="formError" class="error" role="alert"></p>
-        <button id="submitBtn" class="primary" type="submit">Confirmar mi voto</button>
+        <button id="submitBtn" class="primary" type="submit">Confirmar mi predicción</button>
       </form>
 
       <section id="results" class="results" hidden aria-live="polite">
@@ -70,7 +77,19 @@
           <div><span class="dot blue"></span><span>Niño</span><strong id="boyPct">0%</strong></div>
         </div>
 
-        <button id="changeVote" class="secondary" type="button">Cambiar mi voto</button>
+        <section class="names-section" aria-labelledby="namesTitle">
+          <div class="names-header">
+            <span class="baby-icon" aria-hidden="true">👶</span>
+            <div>
+              <p class="names-kicker">PROPUESTAS</p>
+              <h3 id="namesTitle">Nombres que propone la gente</h3>
+            </div>
+          </div>
+          <div id="namesEmpty" class="names-empty">Todavía no hay nombres propuestos.</div>
+          <div id="namesList" class="names-list" aria-live="polite"></div>
+        </section>
+
+        <button id="changeVote" class="secondary" type="button">Cambiar mi predicción o propuesta</button>
       </section>
     </section>
     <p class="footer">Hecho con amor para una espera muy especial ♡</p>

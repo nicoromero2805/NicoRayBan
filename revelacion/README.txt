@@ -1,25 +1,31 @@
-REVELACION - LISTO PARA SUBIR
-=================================
+REVELACION V2 - PRUEBA PARALELA
+================================
 
-Subí la carpeta "revelacion" completa a tu sitio.
+Subir esta carpeta como: revelacion-v2
 
-Incluye:
-- index.html
-- style.css
-- app.js
-- config.js
+Ruta de prueba esperada:
+https://lentesnico.com.ar/revelacion-v2/
 
-Configuración:
-- Supabase Project URL configurado.
-- Publishable key configurada.
-- RPC registrar_voto conectada.
-- RPC resultado_votacion conectada.
-- Un voto por navegador mediante dispositivo_id + UPSERT.
-- El usuario puede cambiar su voto.
-- Resultados visibles después de votar.
-- Diseño responsive/mobile-first.
-- Selector exclusivo Niña/Niño.
-- Gráfico donut rosa/azul.
+IMPORTANTE EN FASTAPI
+Agregar/montar la carpeta V2, por ejemplo:
 
-IMPORTANTE:
-Nunca agregar service_role, sb_secret_, JWT secret ni contraseña de PostgreSQL al frontend.
+app.mount(
+    "/revelacion-v2",
+    StaticFiles(directory="revelacion-v2", html=True),
+    name="revelacion-v2"
+)
+
+Esta V2:
+- Conserva el mismo dispositivo_id/localStorage de la versión actual.
+- Precarga nombre y predicción de quien ya votó desde ese navegador.
+- Agrega nombre sugerido para el bebé (opcional).
+- Usa registrar_voto_v2.
+- Muestra todos los nombres agrupados y ordenados alfabéticamente mediante ranking_nombres.
+- No toca ni borra votos existentes.
+- Mantiene resultado_votacion para el gráfico Niña/Niño.
+
+Para pasar a producción:
+1. Probar V2.
+2. Conservar una copia de la carpeta revelacion actual.
+3. Reemplazar el contenido de revelacion por el de esta V2.
+4. Mantener la ruta pública /revelacion.
