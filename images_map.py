@@ -690,8 +690,9 @@ IMAGES = {
         "https://drive.google.com/file/d/1FO2ZRy_-WL-3sQEyWCZ8Qy0dSTkty6t4/view?usp=drive_link",
     ],
 "100351": [
-        "https://drive.google.com/file/d/1HwTrfbrcv_yOG1S_L8K8KWj3EgAXvEDu/view?usp=drive_link",
-        "https://drive.google.com/file/d/1OIVNQe1BestbcqLXDI_GExQ5kX9EuyNj/view?usp=drive_link",        
+        "https://drive.google.com/file/d/15AeDjyXDNQJup3QHPjCVCrDqdI8GbQZR/view?usp=sharing",
+        "https://drive.google.com/file/d/1S0GXdDi1HGeYt-B6Te8ciNUqCNekC85b/view?usp=sharing"
+                
     ],
 "100352": [
         "https://drive.google.com/file/d/12l7afBhhDxwN9j4gvUVSgXOaWmHEtWJ_/view?usp=drive_link",
