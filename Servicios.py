@@ -235,9 +235,9 @@ def products(vendedor: str | None = None):
 
     cached = _CACHE.get(cache_key)
 
-# Si el cache de este vendedor es válido, lo devolvemos
-if cached and (now - cached["ts"]) < CACHE_SECONDS:
-    return cached["products"]
+    # Si el cache de este vendedor es válido, lo devolvemos
+    if cached and (now - cached["ts"]) < CACHE_SECONDS:
+        return cached["products"]
 
     # Si no hay cache o expiró, recalculamos
     out, header_row, columns = _load_df()
@@ -246,14 +246,16 @@ if cached and (now - cached["ts"]) < CACHE_SECONDS:
     for it in items:
         raw_imgs = IMAGES.get(it["sku"], [])
         imgs = [drive_view_to_direct(u) for u in raw_imgs]
+
         it["foto_url"] = imgs[0] if imgs else None
         it["gallery"] = imgs
 
         desc = (it["description"] or "").lower()
+
         if "polarizado" in desc or "ferrari" in desc or "scuderia" in desc:
             it["price"] = precio_polarizado_vendedor
         else:
-            it["price"] = Precio_lentes_vendedor
+            it["price"] = precio_lentes_vendedor
 
     payload = {
         "count": len(items),
@@ -262,14 +264,13 @@ if cached and (now - cached["ts"]) < CACHE_SECONDS:
         "items": items
     }
 
-   # Guardamos cache para este vendedor
-_CACHE[cache_key] = {
-    "products": payload,
-    "ts": now
-}
+    # Guardamos cache para este vendedor
+    _CACHE[cache_key] = {
+        "products": payload,
+        "ts": now
+    }
 
     return payload
-
 
 @app.get("/stock/{sku}")
 def stock_by_sku(sku: str):
