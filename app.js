@@ -700,7 +700,12 @@ function sendWhatsApp(){
 
 /* Load products */
 async function loadCatalog(){
-  const url = (API_BASE ? API_BASE : "") + "/products";
+  const vendedor = window.location.pathname
+  .replace(/^\/+|\/+$/g, "");
+let url = (API_BASE ? API_BASE : "") + "/products";
+if (vendedor) {
+  url += "?vendedor=" + encodeURIComponent(vendedor);
+}
   const r = await fetch(url, { cache:"no-store" });
   if(!r.ok) throw new Error("HTTP " + r.status);
   const data = await r.json();

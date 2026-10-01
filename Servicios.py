@@ -230,9 +230,13 @@ precio_polarizado_vendedor = float(config["precio_polarizado"])
 def products():
     now = time.time()
 
-    # Si el cache es válido, lo devolvemos
-    if _CACHE["products"] and (now - _CACHE["ts"]) < CACHE_SECONDS:
-        return _CACHE["products"]
+   cache_key = vendedor.lower() if vendedor else "__principal__"
+
+cached = _CACHE.get(cache_key)
+
+# Si el cache de este vendedor es válido, lo devolvemos
+if cached and (now - cached["ts"]) < CACHE_SECONDS:
+    return cached["products"]
 
     # Si no hay cache o expiró, recalculamos
     out, header_row, columns = _load_df()
@@ -257,9 +261,11 @@ def products():
         "items": items
     }
 
-    # Guardamos cache
-    _CACHE["products"] = payload
-    _CACHE["ts"] = now
+   # Guardamos cache para este vendedor
+_CACHE[cache_key] = {
+    "products": payload,
+    "ts": now
+}
 
     return payload
 
