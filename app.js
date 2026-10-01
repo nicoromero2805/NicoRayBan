@@ -4,7 +4,7 @@
 //    => API_BASE = "http://127.0.0.1:8000"
 // ✅ Producción (Render / mismo dominio): API_BASE = ""
 const API_BASE = "";
-console.log("APP JS NUEVO CARGADO 0110");
+//console.log("APP JS NUEVO CARGADO 0110");
 // WhatsApp del vendedor (sin +, sin espacios). Ej: 5493513562759
 const WHATSAPP_NUMBER = "5493512070090";
 const SHIPPING_COST = 0; // Costo envio
@@ -304,9 +304,7 @@ function getQuery(){ return ($("q").value || "").trim().toLowerCase(); }
 
 function applyFilters(){
   let items = ALL.slice();
-console.log(
-  ALL.find(p => String(p.sku) === "100331")
-);
+
   if (ACTIVE_CATEGORY !== "INICIO") {
     items = items.filter(p => p._category === ACTIVE_CATEGORY);
   } else {
