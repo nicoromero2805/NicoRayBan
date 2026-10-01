@@ -9,6 +9,12 @@ from fastapi.staticfiles import StaticFiles
 from images_map import IMAGES  # <-- tu mapa manual de imágenes
 
 app = FastAPI(title="Servicios Lentes")
+# =========================
+# Supabase
+# =========================
+SUPABASE_URL = "https://cgopgobuccqwpqqsmknh.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_DKQc0tfkhL-m-TIKV1215g_nXPQGpIr"
+
 # ✅ Variables modificables (precios)
 Precio_lentes = 125000
 precio_polarizado = 135000
@@ -281,6 +287,63 @@ def debug():
         "columns_detected": columns,
         "sample_items": items
     }
+# =========================
+# Configuración vendedor
+# =========================
+
+@app.get("/api/vendedor")
+@app.get("/api/vendedor/{url}")
+def get_vendedor(url: str | None = None):
+
+    headers = {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+    }
+
+    # Sin URL = vendedor principal
+    if not url:
+        endpoint = (
+            f"{SUPABASE_URL}/rest/v1/vendedores"
+            "?url=is.null&select=*"
+        )
+    else:
+        url = url.strip().lower()
+
+        endpoint = (
+            f"{SUPABASE_URL}/rest/v1/vendedores"
+            f"?url=eq.{url}&select=*"
+        )
+
+    r = requests.get(
+        endpoint,
+        headers=headers,
+        timeout=10
+    )
+
+    if r.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail="Error consultando vendedor"
+        )
+
+    rows = r.json()
+
+    if not rows:
+        raise HTTPException(
+            status_code=404,
+            detail="Vendedor no encontrado"
+        )
+
+    vendedor = rows[0]
+
+    if not vendedor.get("activo", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Vendedor no activo. Comunicarse con administración."
+        )
+
+    return vendedor
+
 
     # =========================
 # Página de vendedores
