@@ -4,7 +4,7 @@
 //    => API_BASE = "http://127.0.0.1:8000"
 // ✅ Producción (Render / mismo dominio): API_BASE = ""
 const API_BASE = "";
-
+console.log("APP JS NUEVO CARGADO");
 // WhatsApp del vendedor (sin +, sin espacios). Ej: 5493513562759
 const WHATSAPP_NUMBER = "5493512070090";
 const SHIPPING_COST = 0; // Costo envio
