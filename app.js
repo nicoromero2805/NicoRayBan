@@ -127,8 +127,8 @@ const SKU_PRIORITY = new Map();
 })();
 
 // 3) Sort: prioritarios primero, resto alfabético
-function skuPrioritySort(a, b){
-  const sa = String(a.sku ?? "");
+//function skuPrioritySort(a, b){
+/*  const sa = String(a.sku ?? "");
   const sb = String(b.sku ?? "");
 
   const pa = SKU_PRIORITY.has(sa) ? SKU_PRIORITY.get(sa) : 999999;
@@ -141,7 +141,34 @@ function skuPrioritySort(a, b){
   const kb = String(b.description || sb);
   return ka.localeCompare(kb, "es");
 }
+*/
 
+function skuPrioritySort(a, b) {
+  const skuA = Number(a.sku || 0);
+  const skuB = Number(b.sku || 0);
+
+  // 1. Ferrari primero, usando la categoría que ya calculó inferCategory()
+  const ferrariA = a._category === "FERRARI";
+  const ferrariB = b._category === "FERRARI";
+
+  if (ferrariA !== ferrariB) {
+    return ferrariA ? -1 : 1;
+  }
+
+  // 2. Después, todos los modelos nuevos (SKU >= 100611)
+  const nuevoA = skuA >= 100611;
+  const nuevoB = skuB >= 100611;
+
+  if (nuevoA !== nuevoB) {
+    return nuevoA ? -1 : 1;
+  }
+
+  // 3. Dentro de cada grupo, mantener orden alfabético
+  const ka = String(a.description || a.sku || "");
+  const kb = String(b.description || b.sku || "");
+
+  return ka.localeCompare(kb, "es");
+}
 
 function loadCart(){
   try{ CART = JSON.parse(localStorage.getItem(CART_KEY) || "{}") || {}; }
@@ -281,6 +308,8 @@ function applyFilters(){
   if (ACTIVE_CATEGORY !== "INICIO") {
     items = items.filter(p => p._category === ACTIVE_CATEGORY);
   } else {
+     // ✅ INICIO: mostrar solamente productos con stock
+  items = items.filter(p => Number(p.stock || 0) > 0);
     // ✅ INICIO: orden por prioridad de SKU
     items.sort(skuPrioritySort);
   }
