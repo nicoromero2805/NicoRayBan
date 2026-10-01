@@ -6,7 +6,7 @@
 const API_BASE = "";
 //console.log("APP JS NUEVO CARGADO 0110");
 // WhatsApp del vendedor (sin +, sin espacios). Ej: 5493513562759
-const WHATSAPP_NUMBER = "5493512070090";
+let WHATSAPP_NUMBER = "5493512070090";
 const SHIPPING_COST = 0; // Costo envio
 const CART_KEY = "lentes_cart_v2";
 let ALL = [];
@@ -698,6 +698,28 @@ function sendWhatsApp(){
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+/* Load number phone */
+async function loadVendedor(){
+  const vendedor = window.location.pathname
+    .replace(/^\/+|\/+$/g, "");
+
+  let url = (API_BASE ? API_BASE : "") + "/api/vendedor";
+
+  if (vendedor) {
+    url += "/" + encodeURIComponent(vendedor);
+  }
+
+  const r = await fetch(url, { cache: "no-store" });
+
+  if (!r.ok) {
+    throw new Error("No se pudo cargar el vendedor");
+  }
+
+  const data = await r.json();
+
+  WHATSAPP_NUMBER = data.telefono;
+}
+
 /* Load products */
 async function loadCatalog(){
   const vendedor = window.location.pathname
@@ -827,6 +849,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try{
+    await loadVendedor();
     await loadCatalog();
   }catch(err){
     console.error(err);
