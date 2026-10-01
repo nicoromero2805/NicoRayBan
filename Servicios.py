@@ -378,4 +378,7 @@ def vendedor_page(vendedor: str):
     if vendedor in RUTAS_RESERVADAS:
         raise HTTPException(status_code=404)
 
+    # Validamos que el vendedor exista y esté activo
+    get_vendedor(vendedor)
+
     return FileResponse("index.html")
