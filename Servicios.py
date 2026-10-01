@@ -224,15 +224,16 @@ def _load_df():
 
 @app.get("/products")
 def products(vendedor: str | None = None):
-config = get_vendedor(vendedor)    
-precio_lentes_vendedor = float(config["precio_lentes"])
-precio_polarizado_vendedor = float(config["precio_polarizado"])
-def products():
+    config = get_vendedor(vendedor)
+
+    precio_lentes_vendedor = float(config["precio_lentes"])
+    precio_polarizado_vendedor = float(config["precio_polarizado"])
+
     now = time.time()
 
-   cache_key = vendedor.lower() if vendedor else "__principal__"
+    cache_key = vendedor.lower() if vendedor else "__principal__"
 
-cached = _CACHE.get(cache_key)
+    cached = _CACHE.get(cache_key)
 
 # Si el cache de este vendedor es válido, lo devolvemos
 if cached and (now - cached["ts"]) < CACHE_SECONDS:
