@@ -31,10 +31,7 @@ def health():
 
 import time
 
-_CACHE = {
-    "products": None,
-    "ts": 0
-}
+_CACHE = {}
 
 CACHE_SECONDS = 300
 
@@ -226,6 +223,10 @@ def _load_df():
 
 
 @app.get("/products")
+def products(vendedor: str | None = None):
+config = get_vendedor(vendedor)    
+precio_lentes_vendedor = float(config["precio_lentes"])
+precio_polarizado_vendedor = float(config["precio_polarizado"])
 def products():
     now = time.time()
 
@@ -245,9 +246,9 @@ def products():
 
         desc = (it["description"] or "").lower()
         if "polarizado" in desc or "ferrari" in desc or "scuderia" in desc:
-            it["price"] = precio_polarizado
+            it["price"] = precio_polarizado_vendedor
         else:
-            it["price"] = Precio_lentes
+            it["price"] = Precio_lentes_vendedor
 
     payload = {
         "count": len(items),
