@@ -281,3 +281,29 @@ def debug():
         "columns_detected": columns,
         "sample_items": items
     }
+
+    # =========================
+# Página de vendedores
+# IMPORTANTE: mantener al final
+# =========================
+
+RUTAS_RESERVADAS = {
+    "fecha",
+    "revelacion",
+    "products",
+    "stock",
+    "debug",
+    "health",
+    "static",
+}
+
+
+@app.get("/{vendedor}")
+def vendedor_page(vendedor: str):
+
+    vendedor = vendedor.strip().lower()
+
+    if vendedor in RUTAS_RESERVADAS:
+        raise HTTPException(status_code=404)
+
+    return FileResponse("index.html")
