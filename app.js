@@ -304,7 +304,9 @@ function getQuery(){ return ($("q").value || "").trim().toLowerCase(); }
 
 function applyFilters(){
   let items = ALL.slice();
-
+console.log(
+  ALL.find(p => String(p.sku) === "100331")
+);
   if (ACTIVE_CATEGORY !== "INICIO") {
     items = items.filter(p => p._category === ACTIVE_CATEGORY);
   } else {
