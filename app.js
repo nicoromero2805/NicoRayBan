@@ -718,6 +718,16 @@ async function loadVendedor(){
   const data = await r.json();
 
   WHATSAPP_NUMBER = data.telefono;
+
+  // WhatsApp del botón flotante
+const waFloat = $("waFloat");
+
+if (waFloat) {
+  const msg = "Hola, quiero hacer una consulta sobre los lentes";
+  
+  waFloat.href =
+    `https://wa.me/${encodeURIComponent(WHATSAPP_NUMBER)}?text=${encodeURIComponent(msg)}`;
+}
 }
 
 /* Load products */
