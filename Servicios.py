@@ -69,9 +69,9 @@ app.mount(
 #)
 
 app.mount(
-    "/catalogov2",
+    "/Catalogov2",
     StaticFiles(directory="catalogov2", html=True),
-    name="catalogov2"
+    name="Catalogov2"
 )
 
 # =========================
@@ -373,7 +373,7 @@ RUTAS_RESERVADAS = {
     "debug",
     "health",
     "static",
-    "catalogov2",
+    "Catalogov2",
 }
 
 
