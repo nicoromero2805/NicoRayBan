@@ -70,7 +70,7 @@ app.mount(
 
 app.mount(
     "/Catalogov2",
-    StaticFiles(directory="catalogov2", html=True),
+    StaticFiles(directory="Catalogov2", html=True),
     name="Catalogov2"
 )
 
