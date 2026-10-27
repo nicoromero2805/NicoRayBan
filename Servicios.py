@@ -256,7 +256,7 @@ def products(vendedor: str | None = None):
         it["foto_url"] = imgs[0] if imgs else None
         it["gallery"] = imgs
 
-               desc = str(it.get("description") or "").lower()
+        desc = str(it.get("description") or "").lower()
 
         try:
             sku_num = int(float(it.get("sku") or 0))
