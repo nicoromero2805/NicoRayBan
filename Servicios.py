@@ -257,6 +257,10 @@ def products(vendedor: str | None = None):
         it["gallery"] = imgs
 
         desc = (it["description"] or "").lower()
+        try:
+    sku_num = int(str(it.get("sku") or "0").strip())
+    except (ValueError, TypeError):
+    sku_num = 0
 
         if (
          "polarizado" in desc
