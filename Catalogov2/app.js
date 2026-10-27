@@ -7,8 +7,12 @@ const vendedor=params.get("vendedor")||"";
 const API="/products"+(vendedor?"?vendedor="+encodeURIComponent(vendedor):"");
 let all=[],selected="TODOS",cart={},page=1,pageSize=20;
 const key="lentes_cart_v2"; // compartido con la versión actual
+const OWNER_WHATSAPP="5493512070090";
+const COEF_MP_1P=145/135, COEF_MP_3P=165/135;
+const floorToThousand=n=>Math.floor(Number(n||0)/1000)*1000;
+const priceOptions=p=>({transfer:Number(p.price||0),one:floorToThousand(Number(p.price||0)*COEF_MP_1P),three:floorToThousand(Number(p.price||0)*COEF_MP_3P)});
 try{cart=JSON.parse(localStorage.getItem(key)||"{}")||{}}catch{cart={}}
-let phone="5493512070090";
+let phone=""; // se obtiene siempre de la API del vendedor
 function category(desc){
  const t=String(desc||"").trim().toUpperCase();
  if(!t)return "OTROS";
@@ -23,6 +27,7 @@ function category(desc){
 }
 const product=sku=>all.find(p=>String(p.sku)===String(sku));
 const available=p=>Number(p.stock||0)>0;
+const stockText=p=>available(p)?`Stock disponible: ${Number(p.stock)} ${Number(p.stock)===1?"unidad":"unidades"}`:"Sin stock";
 function save(){localStorage.setItem(key,JSON.stringify(cart));updateCart()}
 function updateCart(){
  const n=Object.values(cart).reduce((s,p)=>s+Number(p.qty||0),0);
@@ -44,7 +49,7 @@ function add(sku){
 }
 function openCart(){$("overlay").hidden=false;$("drawer").classList.add("open");$("drawer").setAttribute("aria-hidden","false")}
 function closeCart(){$("overlay").hidden=true;$("drawer").classList.remove("open");$("drawer").setAttribute("aria-hidden","true")}
-function wa(text){window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(text),"_blank","noopener")}
+function wa(text){if(!phone){alert("No se pudo obtener el teléfono del vendedor.");return}window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(text),"_blank","noopener")}
 function renderCategories(){
  const counts={};all.forEach(p=>counts[p._category]=(counts[p._category]||0)+1);
  const cats=Object.keys(counts).sort((a,b)=>a.localeCompare(b,"es"));
@@ -69,13 +74,33 @@ function render(){
  $("pagination").innerHTML=items.length<=pageSize?"":`<button data-page="${page-1}" ${page===1?"disabled":""}>‹</button>${Array.from({length:pages},(_,i)=>i+1).filter(n=>n===1||n===pages||Math.abs(n-page)<=2).map((n,i,arr)=>`${i&&n-arr[i-1]>1?'<span>…</span>':""}<button data-page="${n}" ${n===page?'class="active" aria-current="page"':""}>${n}</button>`).join("")}<button data-page="${page+1}" ${page===pages?"disabled":""}>›</button>`;
  $("products").innerHTML=shown.map(p=>{
  const sku=escapeHTML(p.sku),name=escapeHTML(p.description),img=escapeHTML(p.foto_url||"");
- return `<article class="product"><div class="photo" data-detail="${sku}">${img?`<img loading="lazy" src="${img}" alt="${name}">`:"<span>Imagen no disponible</span>"}${!available(p)?'<span class="stock-label">Sin stock</span>':""}</div><div class="category">${escapeHTML(p._category)}</div><h3>${name}</h3><div class="price">${money(p.price)}</div><div class="actions"><button class="secondary" data-detail="${sku}">Ver detalle</button><button data-add="${sku}" ${available(p)?"":"disabled"}>${available(p)?"Agregar +":"Sin stock"}</button></div></article>`;
+ return `<article class="product"><div class="photo" data-detail="${sku}">${img?`<img loading="lazy" src="${img}" alt="${name}">`:"<span>Imagen no disponible</span>"}${!available(p)?'<span class="stock-label">Sin stock</span>':""}</div><div class="category">${escapeHTML(p._category)}</div><h3>${name}</h3><div class="price">${money(p.price)}</div><div class="product-stock ${available(p)?"in-stock":"out-stock"}">${stockText(p)}</div><div class="actions"><button class="secondary" data-detail="${sku}">Ver detalle</button><button data-add="${sku}" ${available(p)?"":"disabled"}>${available(p)?"Agregar +":"Sin stock"}</button></div></article>`;
  }).join("");
 }
 function detail(sku){
  const p=product(sku);if(!p)return;
  const imgs=Array.isArray(p.gallery)&&p.gallery.length?p.gallery:[p.foto_url].filter(Boolean);
- $("detailContent").innerHTML=`<div class="detail-layout"><div><img id="mainDetailImage" src="${escapeHTML(imgs[0]||"")}" alt="${escapeHTML(p.description)}"><div class="detail-thumbs">${imgs.slice(0,6).map(url=>`<button class="thumb" data-img="${escapeHTML(url)}"><img src="${escapeHTML(url)}" alt="Otra vista"></button>`).join("")}</div></div><div><span class="eyebrow">${escapeHTML(p._category)}</span><h2>${escapeHTML(p.description)}</h2><p>SKU ${escapeHTML(p.sku)} · ${available(p)?"Disponible":"Sin stock"}</p><p>${money(p.price)}</p><button class="primary" data-add="${escapeHTML(p.sku)}" ${available(p)?"":"disabled"}>Agregar al carrito</button><p><button class="secondary detail-consult" data-consult="${escapeHTML(p.sku)}">Consultar por WhatsApp ↗</button></p></div></div>`;
+ const prices=priceOptions(p);
+ $("detailContent").innerHTML=`<div class="detail-layout">
+ <div class="detail-photos">
+ <img id="mainDetailImage" src="${escapeHTML(imgs[0]||"")}" alt="${escapeHTML(p.description)}">
+ <div class="detail-thumbs">${imgs.slice(0,6).map((url,i)=>`<button class="thumb ${i===0?"selected":""}" data-img="${escapeHTML(url)}" aria-label="Ver foto ${i+1}"><img src="${escapeHTML(url)}" alt="Vista ${i+1}"></button>`).join("")}</div>
+ </div>
+ <div class="detail-info">
+ <span class="eyebrow">${escapeHTML(p._category)}</span>
+ <h2>${escapeHTML(p.description)}</h2>
+ <p class="detail-sku">SKU ${escapeHTML(p.sku)}</p>
+ <p class="product-stock ${available(p)?"in-stock":"out-stock"}">${stockText(p)}</p>
+ <div class="payment-prices">
+ <div class="payment-row"><span>💵 Transferencia</span><strong>${money(prices.transfer)}</strong></div>
+ <div class="payment-row"><span>💳 Mercado Pago · 1 pago</span><strong>${money(prices.one)}</strong></div>
+ <div class="payment-row"><span>💳 Mercado Pago · 3 cuotas sin interés</span><strong>${money(prices.three)}</strong></div>
+ </div>
+ <div class="detail-actions">
+ <button class="primary" data-add="${escapeHTML(p.sku)}" ${available(p)?"":"disabled"}>${available(p)?"Agregar al carrito":"Sin stock"}</button>
+ <button class="secondary detail-consult" data-consult="${escapeHTML(p.sku)}">Consultar por WhatsApp ↗</button>
+ </div>
+ </div></div>`;
  $("detail").showModal();
 }
 document.addEventListener("click",e=>{
@@ -86,7 +111,7 @@ document.addEventListener("click",e=>{
  if(el.dataset.add){add(el.dataset.add)}
  if(el.dataset.detail){detail(el.dataset.detail)}
  if(el.dataset.consult){const p=product(el.dataset.consult);if(p)wa(`Hola! Quiero consultar por ${p.description} (SKU ${p.sku}).`)}
- if(el.dataset.img)$("mainDetailImage").src=el.dataset.img;
+ if(el.dataset.img){$("mainDetailImage").src=el.dataset.img;document.querySelectorAll(".detail-thumbs .thumb").forEach(b=>b.classList.toggle("selected",b.dataset.img===el.dataset.img));}
  if(el.dataset.inc||el.dataset.dec||el.dataset.remove){
  const k=el.dataset.inc||el.dataset.dec||el.dataset.remove,p=product(k);
  if(el.dataset.remove)delete cart[k];
@@ -107,7 +132,7 @@ $("checkout").onclick=()=>{
  wa(text);
 };
 $("whatsapp").onclick=e=>{e.preventDefault();wa("Hola! Quería consultar por los lentes de Lentes CBA.")};
-const announcements=["🚚 Envíos gratis a todo el país","💳 Todos los medios de pago"];
+const announcements=["🇦🇷 Envíos gratis a todo el país","💳 Todos los medios de pago","📍 Córdoba Capital"];
 let announcementIndex=0;
 setInterval(()=>{
  const el=$("announcementText");el.classList.add("exit");
@@ -122,9 +147,10 @@ async function loadSeller(){
  const data=await res.json();
  phone=String(data.telefono||"").replace(/\D/g,"");
  if(!phone)throw new Error("El vendedor no tiene teléfono configurado");
- $("sellerLabel").innerHTML="Vendedor: <strong>"+escapeHTML(data.nombre||data.name||seller||"Lentes CBA")+"</strong>";
- $("entrepreneur").href="https://wa.me/"+phone+"?text="+encodeURIComponent("Hola, quiero emprender con Lentes CBA.");
+ $("sellerLabel").innerHTML="Vendedor: <strong>"+escapeHTML(seller||data.nombre||data.name||"Lentes CBA")+"</strong>";
+
 }
+$("entrepreneur").href="https://wa.me/"+OWNER_WHATSAPP+"?text="+encodeURIComponent("Hola, quiero emprender con Lentes CBA.");
 async function init(){
  try{
  await loadSeller();
@@ -133,7 +159,6 @@ async function init(){
  if(!all.length)throw Error("No se recibieron productos");
  render();updateCart();
  }catch(err){$("message").textContent="No se pudo cargar el catálogo: "+err.message;}
- // El vendedor principal puede seguir usando el número actual; los enlaces con ?vendedor
- // requieren configurar el número correspondiente antes de usar esta versión.
+
 }
 init();

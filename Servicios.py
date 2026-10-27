@@ -258,7 +258,7 @@ def products(vendedor: str | None = None):
 
         desc = (it["description"] or "").lower()
 
-        if "polarizado" in desc or "ferrari" in desc or "scuderia" in desc:
+        if "polarizado" in desc or "ferrari" in desc or "scuderia" in desc: or sku_num > 100610
             it["price"] = precio_polarizado_vendedor
         else:
             it["price"] = precio_lentes_vendedor
