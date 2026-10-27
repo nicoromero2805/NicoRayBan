@@ -373,7 +373,7 @@ RUTAS_RESERVADAS = {
     "debug",
     "health",
     "static",
-    "Catalogov2",
+    "catalogov2",
 }
 
 
