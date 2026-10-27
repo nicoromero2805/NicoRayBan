@@ -68,6 +68,12 @@ app.mount(
 #    name="revelacion-v2"
 #)
 
+app.mount(
+    "/catalogov2",
+    StaticFiles(directory="catalogov2", html=True),
+    name="catalogov2"
+)
+
 # =========================
 # Google Sheet
 # =========================
