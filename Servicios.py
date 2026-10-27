@@ -256,17 +256,18 @@ def products(vendedor: str | None = None):
         it["foto_url"] = imgs[0] if imgs else None
         it["gallery"] = imgs
 
-        desc = (it["description"] or "").lower()
+               desc = str(it.get("description") or "").lower()
+
         try:
-    sku_num = int(str(it.get("sku") or "0").strip())
-    except (ValueError, TypeError):
-    sku_num = 0
+            sku_num = int(float(it.get("sku") or 0))
+        except (ValueError, TypeError, OverflowError):
+            sku_num = 0
 
         if (
-         "polarizado" in desc
-          or "ferrari" in desc
-          or "scuderia" in desc
-          or sku_num > 100610
+            "polarizado" in desc
+            or "ferrari" in desc
+            or "scuderia" in desc
+            or sku_num > 100610
         ):
             it["price"] = precio_polarizado_vendedor
         else:
