@@ -5,7 +5,7 @@ const money=n=>Number(n||0).toLocaleString("es-AR",{style:"currency",currency:"A
 const params=new URLSearchParams(location.search);
 const vendedor=params.get("vendedor")||"";
 const API="/products"+(vendedor?"?vendedor="+encodeURIComponent(vendedor):"");
-let all=[],selected="TODOS",cart={};
+let all=[],selected="TODOS",cart={},page=1,pageSize=20;
 const key="lentes_cart_v2"; // compartido con la versión actual
 try{cart=JSON.parse(localStorage.getItem(key)||"{}")||{}}catch{cart={}}
 let phone="5493512070090";
@@ -64,7 +64,10 @@ function render(){
  $("categoryTitle").textContent=selected==="TODOS"?"Todos los modelos":selected;
  $("resultCount").textContent=`${items.length} modelos`;
  $("message").textContent=items.length?"":"No encontramos modelos para esta búsqueda.";
- $("products").innerHTML=items.map(p=>{
+ const pages=Math.max(1,Math.ceil(items.length/pageSize));page=Math.min(page,pages);
+ const shown=items.slice((page-1)*pageSize,page*pageSize);
+ $("pagination").innerHTML=items.length<=pageSize?"":`<button data-page="${page-1}" ${page===1?"disabled":""}>‹</button>${Array.from({length:pages},(_,i)=>i+1).filter(n=>n===1||n===pages||Math.abs(n-page)<=2).map((n,i,arr)=>`${i&&n-arr[i-1]>1?'<span>…</span>':""}<button data-page="${n}" ${n===page?'class="active" aria-current="page"':""}>${n}</button>`).join("")}<button data-page="${page+1}" ${page===pages?"disabled":""}>›</button>`;
+ $("products").innerHTML=shown.map(p=>{
  const sku=escapeHTML(p.sku),name=escapeHTML(p.description),img=escapeHTML(p.foto_url||"");
  return `<article class="product"><div class="photo" data-detail="${sku}">${img?`<img loading="lazy" src="${img}" alt="${name}">`:"<span>Imagen no disponible</span>"}${!available(p)?'<span class="stock-label">Sin stock</span>':""}</div><div class="category">${escapeHTML(p._category)}</div><h3>${name}</h3><div class="price">${money(p.price)}</div><div class="actions"><button class="secondary" data-detail="${sku}">Ver detalle</button><button data-add="${sku}" ${available(p)?"":"disabled"}>${available(p)?"Agregar +":"Sin stock"}</button></div></article>`;
  }).join("");
@@ -72,13 +75,14 @@ function render(){
 function detail(sku){
  const p=product(sku);if(!p)return;
  const imgs=Array.isArray(p.gallery)&&p.gallery.length?p.gallery:[p.foto_url].filter(Boolean);
- $("detailContent").innerHTML=`<div class="detail-layout"><div><img id="mainDetailImage" src="${escapeHTML(imgs[0]||"")}" alt="${escapeHTML(p.description)}"><div class="detail-thumbs">${imgs.slice(0,6).map(url=>`<button data-img="${escapeHTML(url)}">◦</button>`).join("")}</div></div><div><span class="eyebrow">${escapeHTML(p._category)}</span><h2>${escapeHTML(p.description)}</h2><p>SKU ${escapeHTML(p.sku)} · ${available(p)?"Disponible":"Sin stock"}</p><p>${money(p.price)}</p><button class="primary" data-add="${escapeHTML(p.sku)}" ${available(p)?"":"disabled"}>Agregar al carrito</button><p><button class="secondary" data-consult="${escapeHTML(p.sku)}">Consultar por WhatsApp ↗</button></p></div></div>`;
+ $("detailContent").innerHTML=`<div class="detail-layout"><div><img id="mainDetailImage" src="${escapeHTML(imgs[0]||"")}" alt="${escapeHTML(p.description)}"><div class="detail-thumbs">${imgs.slice(0,6).map(url=>`<button class="thumb" data-img="${escapeHTML(url)}"><img src="${escapeHTML(url)}" alt="Otra vista"></button>`).join("")}</div></div><div><span class="eyebrow">${escapeHTML(p._category)}</span><h2>${escapeHTML(p.description)}</h2><p>SKU ${escapeHTML(p.sku)} · ${available(p)?"Disponible":"Sin stock"}</p><p>${money(p.price)}</p><button class="primary" data-add="${escapeHTML(p.sku)}" ${available(p)?"":"disabled"}>Agregar al carrito</button><p><button class="secondary detail-consult" data-consult="${escapeHTML(p.sku)}">Consultar por WhatsApp ↗</button></p></div></div>`;
  $("detail").showModal();
 }
 document.addEventListener("click",e=>{
- const el=e.target.closest("[data-category],[data-add],[data-detail],[data-inc],[data-dec],[data-remove],[data-consult],[data-img]");
+ const el=e.target.closest("[data-page],[data-category],[data-add],[data-detail],[data-inc],[data-dec],[data-remove],[data-consult],[data-img]");
  if(!el)return;
- if(el.dataset.category){selected=el.dataset.category;$("categoryPanel").hidden=true;render();$("catalogo").scrollIntoView({behavior:"smooth"})}
+ if(el.dataset.page){page=Number(el.dataset.page);render();$("catalogo").scrollIntoView({behavior:"smooth"});return}
+ if(el.dataset.category){page=1;selected=el.dataset.category;$("categoryPanel").hidden=true;render();$("catalogo").scrollIntoView({behavior:"smooth"})}
  if(el.dataset.add){add(el.dataset.add)}
  if(el.dataset.detail){detail(el.dataset.detail)}
  if(el.dataset.consult){const p=product(el.dataset.consult);if(p)wa(`Hola! Quiero consultar por ${p.description} (SKU ${p.sku}).`)}
@@ -91,7 +95,8 @@ document.addEventListener("click",e=>{
  save();
  }
 });
-$("search").addEventListener("input",render);
+$("search").addEventListener("input",()=>{page=1;render()});
+$("pageSize").addEventListener("change",e=>{pageSize=Number(e.target.value);page=1;render()});
 $("allCategories").onclick=()=>$("categoryPanel").hidden=!$("categoryPanel").hidden;
 $("closeCategories").onclick=()=>$("categoryPanel").hidden=true;
 $("openCart").onclick=openCart;$("closeCart").onclick=closeCart;$("overlay").onclick=closeCart;
@@ -102,8 +107,27 @@ $("checkout").onclick=()=>{
  wa(text);
 };
 $("whatsapp").onclick=e=>{e.preventDefault();wa("Hola! Quería consultar por los lentes de Lentes CBA.")};
+const announcements=["🚚 Envíos gratis a todo el país","💳 Todos los medios de pago"];
+let announcementIndex=0;
+setInterval(()=>{
+ const el=$("announcementText");el.classList.add("exit");
+ setTimeout(()=>{announcementIndex=(announcementIndex+1)%announcements.length;el.textContent=announcements[announcementIndex];el.classList.remove("exit");el.classList.add("enter");requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove("enter")))},350);
+},4500);
+$("waDismiss").onclick=()=>{$("waBubble").hidden=true};
+async function loadSeller(){
+ const seller=params.get("vendedor")||"";
+ const url="/api/vendedor"+(seller?"/"+encodeURIComponent(seller):"");
+ const res=await fetch(url);
+ if(!res.ok)throw new Error("No se pudo consultar el vendedor");
+ const data=await res.json();
+ phone=String(data.telefono||"").replace(/\D/g,"");
+ if(!phone)throw new Error("El vendedor no tiene teléfono configurado");
+ $("sellerLabel").innerHTML="Vendedor: <strong>"+escapeHTML(data.nombre||data.name||seller||"Lentes CBA")+"</strong>";
+ $("entrepreneur").href="https://wa.me/"+phone+"?text="+encodeURIComponent("Hola, quiero emprender con Lentes CBA.");
+}
 async function init(){
  try{
+ await loadSeller();
  const res=await fetch(API);if(!res.ok)throw Error("HTTP "+res.status);
  const data=await res.json();all=(data.items||[]).map(p=>({...p,_category:category(p.description)}));
  if(!all.length)throw Error("No se recibieron productos");

@@ -1,31 +1,12 @@
-# Lentes CBA — Catálogo V2 (prototipo funcional)
+# Lentes CBA — Catálogo V2.1
+Subí los archivos de esta carpeta a la carpeta existente `Catalogov2` de GitHub, junto a Servicios.py.
 
-Este paquete NO modifica los archivos actuales.
+FastAPI (ya configurado):
+`app.mount("/Catalogov2", StaticFiles(directory="Catalogov2", html=True), name="Catalogov2")`
 
-## Instalación
-Copiar `catalogo-v2/` a la raíz del repositorio NicoRayBan.
+URL: https://lentescba.com.ar/Catalogov2/
+Vendedor específico: https://lentescba.com.ar/Catalogov2/?vendedor=Santi
 
-En `Servicios.py`, antes de la ruta `/{vendedor}`, agregar:
+Incluye: 3 columnas PC / 2 móvil, franja de presentación compacta, anuncios alternantes, vendedor por `/api/vendedor`, categorías, búsqueda, paginación 20/40/60/100, íconos SVG, galería con miniaturas y WhatsApp a la izquierda.
 
-```python
-app.mount("/catalogo-v2", StaticFiles(directory="catalogo-v2", html=True), name="catalogo-v2")
-```
-
-Añadir `"catalogo-v2"` a `RUTAS_RESERVADAS` por seguridad y claridad.
-
-Luego visitar `https://lentescba.com.ar/catalogo-v2/`.
-
-## Qué funciona
-- Productos y fotos reales desde `/products` (Google Sheets).
-- Categorías inferidas desde la descripción, con las reglas actuales.
-- Búsqueda, navegación horizontal, panel de categorías, detalle y galería.
-- Stock, carrito local y pedido por WhatsApp.
-- Diseño responsive, Instagram y WhatsApp flotante.
-
-## Importante antes de publicar
-- Es una V2 independiente, no un reemplazo exacto del checkout original.
-- El carrito comparte la clave `lentes_cart_v2` con la tienda anterior; probar compatibilidad.
-- El teléfono de WhatsApp de esta V2 usa el número principal actual como valor inicial.
-  Falta integrar la configuración dinámica de vendedor que usa el sitio original.
-- Probar importes, disponibilidad, galería, enlaces, móvil y proceso de compra.
-- NO sustituir la página principal ni eliminar archivos originales hasta aprobar pruebas.
+IMPORTANTE: checkout de este prototipo es simplificado. NO reemplazar la web original hasta integrar el checkout completo (datos del cliente, entrega, pagos) y verificar la configuración de cada vendedor.
