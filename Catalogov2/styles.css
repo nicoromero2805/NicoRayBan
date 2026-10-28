@@ -97,3 +97,22 @@ footer a{text-decoration:none;font-weight:700}
 .payment-result span{font-size:12px;color:#6e6962}
 .payment-result strong{font-size:21px}
 .payment-result small{font-size:12px;color:#6e6962}
+
+/* V4.2: layout determinista para tarjetas de dos columnas */
+.products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+.product{display:flex;flex-direction:column;min-width:0;height:100%}
+.product .photo{width:100%;flex:0 0 auto}
+.product .product-body{display:grid;grid-template-rows:18px minmax(60px,auto) 25px minmax(45px,auto) auto;align-content:stretch;flex:1;min-width:0}
+.product .product-body .category{min-height:0}
+.product .product-body h3{min-height:0;margin:4px 0 6px;line-height:1.35;overflow-wrap:anywhere}
+.product .product-body .price{min-height:0;margin:0}
+.product .product-body .product-stock{min-height:0;margin:0 0 7px}
+.product .product-body .actions{display:grid;grid-template-columns:1fr;gap:6px;align-self:end;margin:0}
+.product .product-body .actions button{width:100%;min-width:0;min-height:36px;margin:0}
+@media(max-width:850px){.products{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ .products{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 9px}
+ .product .product-body{grid-template-rows:17px minmax(70px,auto) 25px minmax(50px,auto) auto}
+ .product .product-body h3{font-size:11px}
+ .product .product-body .actions button{font-size:10px;min-height:36px}
+}

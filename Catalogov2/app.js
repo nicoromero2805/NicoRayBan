@@ -27,9 +27,9 @@ function category(desc){
 }
 // Presentación: la fuente de datos conserva su descripción original.
 function displayName(value){
- const special={"ray-ban":"Ray-Ban","uv":"UV","3d":"3D","ferrari":"Ferrari","scuderia":"Scuderia"};
- return String(value||"").trim().toLocaleLowerCase("es-AR")
-   .replace(/\S+/g,word=>special[word]||word.charAt(0).toLocaleUpperCase("es-AR")+word.slice(1));
+ const special={"ferrari":"Ferrari","scuderia":"Scuderia","ray-ban":"Ray-Ban","rayban":"Ray-Ban","uv":"UV","3d":"3D","marron":"Marrón","degrade":"Degradé"};
+ return String(value??"").trim().replace(/\\s+/g," ").toLocaleLowerCase("es-AR")
+ .replace(/[^\\s]+/g,w=>special[w]||w.charAt(0).toLocaleUpperCase("es-AR")+w.slice(1));
 }
 const product=sku=>all.find(p=>String(p.sku)===String(sku));
 const available=p=>Number(p.stock||0)>0;
