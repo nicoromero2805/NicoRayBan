@@ -64,3 +64,36 @@ footer a{text-decoration:none;font-weight:700}
 .detail-thumbs .thumb.selected{border:2px solid #27251f}
 .detail-layout .detail-photos>img{border-radius:10px}
 @media(max-width:600px){.detail-actions{grid-template-columns:1fr}.detail-actions button{min-height:46px}.payment-row{font-size:11px}}
+
+/* V4 — tarjetas alineadas en escritorio y móvil */
+.products{align-items:stretch}
+.product{display:flex;flex-direction:column;min-width:0;height:100%}
+.product .photo{flex:none}
+.product-body{display:flex;flex:1;flex-direction:column;min-width:0;padding-top:5px}
+.product-body .category{min-height:16px}
+.product-body h3{line-height:1.4;min-height:calc(1.4em * 3);margin:8px 0 6px;overflow-wrap:anywhere}
+.product-body .price{margin-top:0;min-height:22px}
+.product-body .product-stock{min-height:36px;margin:7px 0 9px}
+.product-body .actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+.product-body .actions button{flex:none;width:100%;min-height:36px}
+@media(max-width:600px){
+ .product-body h3{font-size:12px;min-height:calc(1.4em * 3)}
+ .product-body .product-stock{font-size:11px;min-height:45px}
+ .product-body .actions button{font-size:11px}
+}
+/* V4 — precio de transferencia y desplegable MP */
+.transfer-price{display:flex;flex-direction:column;gap:5px;margin:18px 0 16px}
+.transfer-price span{font-size:12px;color:#777}
+.transfer-price strong{font-size:27px;line-height:1.15;color:#27251f}
+.payment-options{border:1px solid var(--line);border-radius:10px;margin:0;padding:0;overflow:hidden}
+.payment-options summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:15px;font-size:13px;font-weight:650}
+.payment-options summary::-webkit-details-marker{display:none}
+.payment-chevron{font-size:22px;line-height:1;transition:transform .2s}
+.payment-options[open] .payment-chevron{transform:rotate(180deg)}
+.payment-options-body{padding:0 15px 15px;display:flex;flex-direction:column;gap:9px}
+.payment-options-body label{font-size:12px;color:#6e6962}
+.payment-select{width:100%;border:1px solid #d9d5cf;border-radius:8px;padding:12px;background:#fff;font:inherit;font-size:13px}
+.payment-result{display:flex;flex-direction:column;gap:5px;background:#f7f5f2;border-radius:9px;padding:13px;margin-top:3px}
+.payment-result span{font-size:12px;color:#6e6962}
+.payment-result strong{font-size:21px}
+.payment-result small{font-size:12px;color:#6e6962}

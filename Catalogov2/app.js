@@ -25,6 +25,12 @@ function category(desc){
  if(t.includes("CAT")&&!t.includes("CATCH"))return "CAT EYE";
  return t.split(/\s+/)[0]||"OTROS";
 }
+// Presentación: la fuente de datos conserva su descripción original.
+function displayName(value){
+ const special={"ray-ban":"Ray-Ban","uv":"UV","3d":"3D","ferrari":"Ferrari","scuderia":"Scuderia"};
+ return String(value||"").trim().toLocaleLowerCase("es-AR")
+   .replace(/\S+/g,word=>special[word]||word.charAt(0).toLocaleUpperCase("es-AR")+word.slice(1));
+}
 const product=sku=>all.find(p=>String(p.sku)===String(sku));
 const available=p=>Number(p.stock||0)>0;
 const stockText=p=>available(p)?`Stock disponible: ${Number(p.stock)} ${Number(p.stock)===1?"unidad":"unidades"}`:"Sin stock";
@@ -36,7 +42,7 @@ function updateCart(){
  $("cartItems").innerHTML=Object.values(cart).map(c=>{
  const p=product(c.sku);if(!p)return "";
  sum+=Number(p.price||0)*Number(c.qty||0);
- return `<div class="cart-item"><img src="${escapeHTML(p.foto_url||"")}" alt=""><div><strong>${escapeHTML(p.description)}</strong><p>${money(p.price)} · Stock ${Number(p.stock||0)}</p><button data-dec="${escapeHTML(p.sku)}">−</button> <span>${Number(c.qty)}</span> <button data-inc="${escapeHTML(p.sku)}">+</button> <button data-remove="${escapeHTML(p.sku)}">Quitar</button></div></div>`;
+ return `<div class="cart-item"><img src="${escapeHTML(p.foto_url||"")}" alt=""><div><strong>${escapeHTML(displayName(p.description))}</strong><p>${money(p.price)} · Stock ${Number(p.stock||0)}</p><button data-dec="${escapeHTML(p.sku)}">−</button> <span>${Number(c.qty)}</span> <button data-inc="${escapeHTML(p.sku)}">+</button> <button data-remove="${escapeHTML(p.sku)}">Quitar</button></div></div>`;
  }).join("")||"<p>Tu carrito está vacío.</p>";
  $("subtotal").textContent=money(sum);
 }
@@ -73,29 +79,41 @@ function render(){
  const shown=items.slice((page-1)*pageSize,page*pageSize);
  $("pagination").innerHTML=items.length<=pageSize?"":`<button data-page="${page-1}" ${page===1?"disabled":""}>‹</button>${Array.from({length:pages},(_,i)=>i+1).filter(n=>n===1||n===pages||Math.abs(n-page)<=2).map((n,i,arr)=>`${i&&n-arr[i-1]>1?'<span>…</span>':""}<button data-page="${n}" ${n===page?'class="active" aria-current="page"':""}>${n}</button>`).join("")}<button data-page="${page+1}" ${page===pages?"disabled":""}>›</button>`;
  $("products").innerHTML=shown.map(p=>{
- const sku=escapeHTML(p.sku),name=escapeHTML(p.description),img=escapeHTML(p.foto_url||"");
- return `<article class="product"><div class="photo" data-detail="${sku}">${img?`<img loading="lazy" src="${img}" alt="${name}">`:"<span>Imagen no disponible</span>"}${!available(p)?'<span class="stock-label">Sin stock</span>':""}</div><div class="category">${escapeHTML(p._category)}</div><h3>${name}</h3><div class="price">${money(p.price)}</div><div class="product-stock ${available(p)?"in-stock":"out-stock"}">${stockText(p)}</div><div class="actions"><button class="secondary" data-detail="${sku}">Ver detalle</button><button data-add="${sku}" ${available(p)?"":"disabled"}>${available(p)?"Agregar +":"Sin stock"}</button></div></article>`;
+ const sku=escapeHTML(p.sku),name=escapeHTML(displayName(p.description)),img=escapeHTML(p.foto_url||"");
+ return `<article class="product"><div class="photo" data-detail="${sku}">${img?`<img loading="lazy" src="${img}" alt="${name}">`:"<span>Imagen no disponible</span>"}${!available(p)?'<span class="stock-label">Sin stock</span>':""}</div><div class="product-body"><div class="category">${escapeHTML(p._category)}</div><h3>${name}</h3><div class="price">${money(p.price)}</div><div class="product-stock ${available(p)?"in-stock":"out-stock"}">${stockText(p)}</div><div class="actions"><button class="secondary" data-detail="${sku}">Ver detalle</button><button data-add="${sku}" ${available(p)?"":"disabled"}>${available(p)?"Agregar +":"Sin stock"}</button></div></div></article>`;
  }).join("");
 }
 function detail(sku){
  const p=product(sku);if(!p)return;
  const imgs=Array.isArray(p.gallery)&&p.gallery.length?p.gallery:[p.foto_url].filter(Boolean);
  const prices=priceOptions(p);
+ $("detailContent").dataset.sku=String(p.sku);
  $("detailContent").innerHTML=`<div class="detail-layout">
  <div class="detail-photos">
- <img id="mainDetailImage" src="${escapeHTML(imgs[0]||"")}" alt="${escapeHTML(p.description)}">
+ <img id="mainDetailImage" src="${escapeHTML(imgs[0]||"")}" alt="${escapeHTML(displayName(p.description))}">
  <div class="detail-thumbs">${imgs.slice(0,6).map((url,i)=>`<button class="thumb ${i===0?"selected":""}" data-img="${escapeHTML(url)}" aria-label="Ver foto ${i+1}"><img src="${escapeHTML(url)}" alt="Vista ${i+1}"></button>`).join("")}</div>
  </div>
  <div class="detail-info">
  <span class="eyebrow">${escapeHTML(p._category)}</span>
- <h2>${escapeHTML(p.description)}</h2>
+ <h2>${escapeHTML(displayName(p.description))}</h2>
  <p class="detail-sku">SKU ${escapeHTML(p.sku)}</p>
  <p class="product-stock ${available(p)?"in-stock":"out-stock"}">${stockText(p)}</p>
- <div class="payment-prices">
- <div class="payment-row"><span>💵 Transferencia</span><strong>${money(prices.transfer)}</strong></div>
- <div class="payment-row"><span>💳 Mercado Pago · 1 pago</span><strong>${money(prices.one)}</strong></div>
- <div class="payment-row"><span>💳 Mercado Pago · 3 cuotas sin interés</span><strong>${money(prices.three)}</strong></div>
- </div>
+ <div class="transfer-price"><span>Precio por transferencia</span><strong>${money(prices.transfer)}</strong></div>
+ <details class="payment-options">
+   <summary><span>💳 Otras opciones de pago</span><span class="payment-chevron" aria-hidden="true">⌄</span></summary>
+   <div class="payment-options-body">
+     <label for="mpPlan">Elegí una opción de Mercado Pago</label>
+     <select id="mpPlan" class="payment-select">
+       <option value="1">1 pago</option>
+       <option value="3">3 cuotas</option>
+     </select>
+     <div class="payment-result" aria-live="polite">
+       <span id="mpPriceLabel">Total con Mercado Pago</span>
+       <strong id="mpPriceValue">${money(prices.one)}</strong>
+       <small id="mpPriceTotal" hidden></small>
+     </div>
+   </div>
+ </details>
  <div class="detail-actions">
  <button class="primary" data-add="${escapeHTML(p.sku)}" ${available(p)?"":"disabled"}>${available(p)?"Agregar al carrito":"Sin stock"}</button>
  <button class="secondary detail-consult" data-consult="${escapeHTML(p.sku)}">Consultar por WhatsApp ↗</button>
@@ -119,6 +137,18 @@ document.addEventListener("click",e=>{
  else if(el.dataset.dec&&cart[k]){cart[k].qty--;if(cart[k].qty<=0)delete cart[k]}
  save();
  }
+});
+// El selector solo actualiza el precio informativo del detalle.
+document.addEventListener("change",e=>{
+ if(e.target.id!=="mpPlan")return;
+ const p=product($("detailContent").dataset.sku);
+ if(!p)return;
+ const prices=priceOptions(p);
+ const three=e.target.value==="3";
+ $("mpPriceLabel").textContent=three?"3 cuotas de":"Total con Mercado Pago";
+ $("mpPriceValue").textContent=money(three?prices.three/3:prices.one);
+ $("mpPriceTotal").hidden=!three;
+ $("mpPriceTotal").textContent=three?"Total financiado: "+money(prices.three):"";
 });
 $("search").addEventListener("input",()=>{page=1;render()});
 $("pageSize").addEventListener("change",e=>{pageSize=Number(e.target.value);page=1;render()});
