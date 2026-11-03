@@ -1,868 +1,216 @@
-// app.js
 
-// ✅ Local: front en 5500 + back en 8000
-//    => API_BASE = "http://127.0.0.1:8000"
-// ✅ Producción (Render / mismo dominio): API_BASE = ""
-const API_BASE = "";
-//console.log("APP JS NUEVO CARGADO 0110");
-// WhatsApp del vendedor (sin +, sin espacios). Ej: 5493513562759
-let WHATSAPP_NUMBER = "5493512070090";
-const SHIPPING_COST = 0; // Costo envio
-const CART_KEY = "lentes_cart_v2";
-let ALL = [];
-let ACTIVE_CATEGORY = "INICIO"; // Para iniciar en una categoria Colocamos la categoria que queremos , sino ponemos INICIO y CARGA TODOS
-let VIEW_MODE = "grid"; // grid | list
-let CART = {}; // sku -> {sku, description, qty}
-
-let PM_SKU = null;
-let PM_GALLERY = [];
-let PM_PRODUCT = null;
-//let ACTIVE_PRODUCT = null;
-const COEF_MP_1P = 145 / 135; // 1.074074...
-const COEF_MP_3P = 165 / 135; // 1.222222...
-function floorToThousand(n){
-  return Math.floor(Number(n||0) / 1000) * 1000;
-}
-function $(id){ return document.getElementById(id); }
-
-// =========================
-// ✅ Popup "Agregado correctamente"
-// =========================
-let ADD_POP_TIMEOUT = null;
-
-function openAddPopup(p){
-  const bd  = $("addPopBackdrop");
-  const pop = $("addPop");
-  const sub = $("apSub");
-
-  // Si por algún motivo no existe el HTML, no rompemos la app
-  if(!bd || !pop || !sub) return;
-
-  sub.textContent = p ? `${p.description || ""} (SKU: ${p.sku})` : "";
-
-  bd.classList.remove("hidden");
-  pop.classList.remove("hidden");
-
-  clearTimeout(ADD_POP_TIMEOUT);
-  ADD_POP_TIMEOUT = setTimeout(closeAddPopup, 15000); // auto-cierre opcional
+const $=id=>document.getElementById(id);
+const escapeHTML=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>Number(n||0).toLocaleString("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0});
+const params=new URLSearchParams(location.search);
+const vendedor=params.get("vendedor")||decodeURIComponent(location.pathname.split("/").filter(Boolean)[0] || "");
+const API="/products"+(vendedor?"?vendedor="+encodeURIComponent(vendedor):"");
+let all=[],selected="TODOS",cart={},page=1,pageSize=20;
+const key="lentes_cart_v2"; // compartido con la versión actual
+const OWNER_WHATSAPP="5493512070090";
+const COEF_MP_1P=145/135, COEF_MP_3P=165/135;
+const floorToThousand=n=>Math.floor(Number(n||0)/1000)*1000;
+const priceOptions=p=>({transfer:Number(p.price||0),one:floorToThousand(Number(p.price||0)*COEF_MP_1P),three:floorToThousand(Number(p.price||0)*COEF_MP_3P)});
+try{cart=JSON.parse(localStorage.getItem(key)||"{}")||{}}catch{cart={}}
+let phone=""; // se obtiene siempre de la API del vendedor
+function category(desc){
+ const t=String(desc||"").trim().toUpperCase();
+ if(!t)return "OTROS";
+ if(t.startsWith("THE JA"))return "THE JA-JO";
+ if(t.startsWith("THE ")){const p=t.split(/\s+/);return p[1]?"THE "+p[1]:"THE"}
+ if(t.startsWith("BIL ")||t.startsWith("BILL "))return "BILL";
+ if(t.includes("FERRARI")||t.includes("SCUDERIA"))return "FERRARI";
+ if(t.includes("CAT EYE"))return "CAT EYE";
+ if(t.includes("CAT 5000"))return "CAT 5000";
+ if(t.includes("CAT")&&!t.includes("CATCH"))return "CAT EYE";
+ return t.split(/\s+/)[0]||"OTROS";
 }
 
-function closeAddPopup(){
-  const bd  = $("addPopBackdrop");
-  const pop = $("addPop");
-  if(!bd || !pop) return;
-
-  clearTimeout(ADD_POP_TIMEOUT);
-  bd.classList.add("hidden");
-  pop.classList.add("hidden");
-}
-
-function escapeHtml(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-function moneyARS(n){
-  const v = Number(n);
-  if(!Number.isFinite(v)) return "";
-  try{
-    return v.toLocaleString("es-AR", { style:"currency", currency:"ARS", maximumFractionDigits: 0 });
-  }catch{
-    return "$ " + Math.round(v);
-  }
-}
-
-function inferCategory(desc){
-  const t = String(desc || "").trim().toUpperCase();
-  if(!t) return "OTROS";
-
-  // Casos especiales que ya tenías
-  if (t.startsWith("THE JA")) return "THE JA-JO";
-  if (t.startsWith("THE ")) {
-    const parts = t.split(/\s+/);
-    return parts[1] ? `THE ${parts[1]}` : "THE";
-  }
-  if (t.startsWith("BIL ") || t.startsWith("BILL ")) return "BILL";
-
-  // ✅ Prioridades por keyword (no por primera palabra)
-  // Si aparece FERRARI en cualquier parte, categorizá como FERRARI
-  if (t.includes("FERRARI") || t.includes("SCUDERIA")) return "FERRARI";
-
-  // Cat eye / cats
-  if (t.includes("CAT EYE")) return "CAT EYE";
-  if (t.includes("CAT 5000")) return "CAT 5000";
-  if (t.includes("CAT") && !t.includes("CATCH")) return "CAT EYE"; // opcional
-
-  // Si no matchea nada, cae a la primera palabra (como antes)
-  const parts = t.split(/\s+/);
-  return parts[0] || "OTROS";
-}
-// ================= PRIORIDAD POR SKU (INICIO) =================
-
-// 1) SKUs destacados en el orden exacto
-const PRIORITY_SKU_GROUPS = [
-  // Ferrari
-  ["100193","100258","100331","100332","100336","100349","100357","100359","100360","100366","100500","100501", "100502","100515","100527","100528","100529","100530","100531","100532","100533","100534","100535","100536",
-   "100537", "100602","100606","100608","100609","100610"],
-  // CAT EYE
-  ["100363", "100364"]
-];
-
-// 2) Mapa SKU → prioridad
-const SKU_PRIORITY = new Map();
-(function buildSkuPriority(){
-  let pos = 0;
-  for (const group of PRIORITY_SKU_GROUPS){
-    for (const sku of group){
-      const s = String(sku);
-      if (!SKU_PRIORITY.has(s)) {
-        SKU_PRIORITY.set(s, pos++);
-      }
-    }
-  }
-})();
-
-// 3) Sort: prioritarios primero, resto alfabético
-//function skuPrioritySort(a, b){
-/*  const sa = String(a.sku ?? "");
-  const sb = String(b.sku ?? "");
-
-  const pa = SKU_PRIORITY.has(sa) ? SKU_PRIORITY.get(sa) : 999999;
-  const pb = SKU_PRIORITY.has(sb) ? SKU_PRIORITY.get(sb) : 999999;
-
-  if (pa !== pb) return pa - pb;
-
-  // Resto ordenado alfabéticamente
-  const ka = String(a.description || sa);
-  const kb = String(b.description || sb);
-  return ka.localeCompare(kb, "es");
-}
-*/
-
-function skuPrioritySort(a, b) {
-  const skuA = Number(a.sku || 0);
-  const skuB = Number(b.sku || 0);
-
-  // 1. Ferrari primero, usando la categoría que ya calculó inferCategory()
-  const ferrariA = a._category === "FERRARI";
-  const ferrariB = b._category === "FERRARI";
-
-  if (ferrariA !== ferrariB) {
-    return ferrariA ? -1 : 1;
-  }
-
-  // 2. Después, todos los modelos nuevos (SKU >= 100611)
-  const nuevoA = skuA >= 100611;
-  const nuevoB = skuB >= 100611;
-
-  if (nuevoA !== nuevoB) {
-    return nuevoA ? -1 : 1;
-  }
-
-  // 3. Dentro de cada grupo, mantener orden alfabético
-  const ka = String(a.description || a.sku || "");
-  const kb = String(b.description || b.sku || "");
-
-  return ka.localeCompare(kb, "es");
-}
-
-function loadCart(){
-  try{ CART = JSON.parse(localStorage.getItem(CART_KEY) || "{}") || {}; }
-  catch{ CART = {}; }
-}
-function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(CART)); }
-
-function totalQty(){
-  return Object.values(CART).reduce((a,b)=> a + Number(b.qty||0), 0);
-}
-
-function findProduct(sku){
-  return ALL.find(p => String(p.sku) === String(sku));
-}
-
-function canAdd(sku){
-  const p = findProduct(sku);
-  const stock = Number(p?.stock ?? 0);
-  if(stock <= 0) return false;
-  const qty = Number(CART[String(sku)]?.qty ?? 0);
-  return qty < stock;
-}
-
-function addToCart(sku){
-  const p = findProduct(sku);
-  if(!p) return;
-  const stock = Number(p.stock ?? 0);
-  if(stock <= 0) return;
-
-  const key = String(sku);
-  if(!CART[key]){
-    CART[key] = { sku:key, description: String(p.description||""), qty:1 };
-  }else{
-    if(CART[key].qty >= stock) return;
-    CART[key].qty++;
-  }
-  saveCart();
-  renderCart();
-  updateCartBadge();
-
-  // ✅ Popup confirmación
-  openAddPopup(p);
-}
-
-function incFromCart(sku){
-  if(!canAdd(sku)) return;
-  CART[String(sku)].qty++;
-  saveCart();
-  renderCart();
-  updateCartBadge();
-}
-
-function decFromCart(sku){
-  const key = String(sku);
-  if(!CART[key]) return;
-  CART[key].qty = Math.max(0, Number(CART[key].qty||0) - 1);
-  if(CART[key].qty === 0) delete CART[key];
-  saveCart();
-  renderCart();
-  updateCartBadge();
-}
-
-function removeFromCart(sku){
-  delete CART[String(sku)];
-  saveCart();
-  renderCart();
-  updateCartBadge();
-}
-
-function clearCart(){
-  CART = {};
-  saveCart();
-  renderCart();
-  updateCartBadge();
-  goStep("cart");
-}
-
-function updateCartBadge(){
-  const n = totalQty();
-  const b = $("cartBadge");
-  if(n > 0){
-    b.style.display = "inline-block";
-    b.textContent = n;
-  }else{
-    b.style.display = "none";
-    b.textContent = "0";
-  }
-  $("cartTitle").textContent = `Carrito (${n})`;
-}
-
-function buildCategories(){
-  const counts = new Map();
-  for(const p of ALL){
-    p._category = inferCategory(p.description);
-    counts.set(p._category, (counts.get(p._category) || 0) + 1);
-  }
-  const cats = Array.from(counts.entries()).sort((a,b)=> a[0].localeCompare(b[0],"es"));
-  return { cats, counts };
-}
-
-function selectCategory(cat){
-  ACTIVE_CATEGORY = cat;
-  renderCategoriesUI();
-  applyFilters();
-}
-
-function renderCategoriesUI(){
-  const { cats, counts } = buildCategories();
-
-  $("chips").innerHTML =
-    `<button class="chip ${ACTIVE_CATEGORY==="INICIO"?"active":""}" type="button" onclick="selectCategory('INICIO')">INICIO</button>` +
-    cats.map(([name]) =>
-      `<button class="chip ${ACTIVE_CATEGORY===name?"active":""}" type="button" onclick="selectCategory('${escapeHtml(name)}')">${escapeHtml(name)}</button>`
-    ).join("");
-
-  $("catVertical").innerHTML =
-    `<button class="cat-v-btn ${ACTIVE_CATEGORY==="INICIO"?"active":""}" type="button" onclick="selectCategory('INICIO')">INICIO</button>` +
-    cats.map(([name]) =>
-      `<button class="cat-v-btn ${ACTIVE_CATEGORY===name?"active":""}" type="button" onclick="selectCategory('${escapeHtml(name)}')">${escapeHtml(name)} <span class="muted">(${counts.get(name)})</span></button>`
-    ).join("");
-
-  $("sectionTitle").textContent = ACTIVE_CATEGORY;
-}
-
-// ✅ Exponer funciones usadas por onclick inline (esto arregla el “no funciona añadir” en iPhone/desktop)
-window.selectCategory = selectCategory;
-window.addToCart = addToCart;
-window.incFromCart = incFromCart;
-window.decFromCart = decFromCart;
-window.removeFromCart = removeFromCart;
-
-function getQuery(){ return ($("q").value || "").trim().toLowerCase(); }
-
-function applyFilters(){
-  let items = ALL.slice();
-
-  if (ACTIVE_CATEGORY !== "INICIO") {
-    items = items.filter(p => p._category === ACTIVE_CATEGORY);
-  } else {
-     // ✅ INICIO: mostrar solamente productos con stock
-  items = items.filter(p => Number(p.stock || 0) > 0);
-    // ✅ INICIO: orden por prioridad de SKU
-    items.sort(skuPrioritySort);
-  }
-
-  const q = getQuery();
-  if(q){
-    items = items.filter(p => {
-      const sku = String(p.sku||"").toLowerCase();
-      const desc = String(p.description||"").toLowerCase();
-      return sku.includes(q) || desc.includes(q);
-    });
-  }
-
-  $("meta").textContent = `Productos: ${items.length} / ${ALL.length}`;
-
-  if(VIEW_MODE === "grid"){
-    $("grid").classList.remove("hidden");
-    $("list").classList.add("hidden");
-    renderGrid(items);
-  }else{
-    $("grid").classList.add("hidden");
-    $("list").classList.remove("hidden");
-    renderList(items);
-  }
-}
-
-
-function mainImage(p){
-  const g = Array.isArray(p.gallery) ? p.gallery : [];
-  return g[0] || p.foto_url || "";
-}
-
-function renderGrid(items){
-  $("grid").innerHTML = items.map(p=>{
-    const img = mainImage(p);
-    const stock = Number(p.stock||0);
-    const disabled = stock <= 0;
-    const price = moneyARS(p.price);
-
-    return `
-      <div class="pcard">
-        <div class="pimg" onclick="openProduct('${escapeHtml(p.sku)}')" title="Ver detalle">
-          ${img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.description||"")}" loading="lazy">` : ``}
-          <button class="plus" ${disabled ? "disabled":""} onclick="event.stopPropagation(); addToCart('${escapeHtml(p.sku)}')" type="button">+</button>
-        </div>
-        <div class="pname">${escapeHtml(p.description||"")}</div>
-        <div class="pmeta">
-          <div class="${disabled ? "no" : "pstock"}">${disabled ? "No disponible" : ("Stock: " + stock)}</div>
-          <div class="price">${price}</div>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderList(items){
-  $("list").innerHTML = items.map(p=>{
-    const img = mainImage(p);
-    const stock = Number(p.stock||0);
-    const disabled = stock <= 0;
-    const price = moneyARS(p.price);
-
-    return `
-      <div class="lrow">
-        <div class="limg" onclick="openProduct('${escapeHtml(p.sku)}')" title="Ver detalle">
-          ${img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.description||"")}" loading="lazy">` : ``}
-        </div>
-        <div class="linfo" onclick="openProduct('${escapeHtml(p.sku)}')">
-          <div class="ltitle">${escapeHtml(p.description||"")}</div>
-          <div class="lsub">${disabled ? "No disponible" : ("Stock: " + stock)} · ${price}</div>
-        </div>
-        <button class="lplus" ${disabled ? "disabled":""} type="button" onclick="addToCart('${escapeHtml(p.sku)}')">+</button>
-      </div>
-    `;
-  }).join("");
-}
-
-/* Product modal */
-function openProduct(sku){
-  const p = findProduct(sku);
-  if(!p) return;
-  PM_PRODUCT = p;
-
-  PM_SKU = String(sku);
-  PM_GALLERY = Array.isArray(p.gallery) && p.gallery.length ? p.gallery : (p.foto_url ? [p.foto_url] : []);
-  const stock = Number(p.stock||0);
-  const cat = p._category || inferCategory(p.description);
-
-  $("pmSub").textContent = `SKU: ${p.sku}`;
-  $("pmCat").textContent = cat;
-  $("pmDesc").textContent = p.description || "";
-	// ===== Ficha técnica en una línea =====
-const talle   = String(p.talle || "").trim();
-let lente     = String(p.lente_mm || "").trim();
-const puente  = String(p.puente_mm || "").trim();
-const varilla = String(p.varilla_mm || "").trim();
-
-// Convertir "58/50" → "58×50"
-if(lente.includes("/")){
-  const parts = lente.split("/");
-  if(parts.length === 2){
-    lente = parts[0] + "×" + parts[1];
-  }
-}
-
-const techParts = [];
-if(talle)   techParts.push(`Talle ${talle}`);
-if(lente)   techParts.push(`Lente ${lente} mm`);
-if(puente)  techParts.push(`Puente ${puente} mm`);
-if(varilla) techParts.push(`Patilla ${varilla} mm`);
-
-const techBox = $("pmTech");
-if(techBox){
-  if(techParts.length){
-    techBox.style.display = "block";
-    $("pmTechText").textContent = techParts.join(" · ");
-  }else{
-    techBox.style.display = "none";
-  }
-}
-
-  $("pmStockPill").textContent = `Stock: ${stock}`;
-  $("pmPrice").textContent = moneyARS(p.price);
-	const base = Number(p.price || 0); // transferencia
-	const p1 = floorToThousand(base * COEF_MP_1P);
-	const p3 = floorToThousand(base * COEF_MP_3P);
-	$("pmPriceTransfer").textContent = moneyARS(base);
-	$("pmPrice1p").textContent = moneyARS(p1);
-	$("pmPrice3p").textContent = moneyARS(p3);
-  const main = $("pmImg");
-  main.src = PM_GALLERY[0] || "";
-
-  const thumbs = $("pmThumbs");
-  thumbs.innerHTML = PM_GALLERY.map((u,i)=>`
-    <div class="pm-thumb ${i===0?"active":""}" data-i="${i}">
-      <img src="${escapeHtml(u)}" alt="thumb" loading="lazy">
-    </div>
-  `).join("");
-
-  thumbs.querySelectorAll(".pm-thumb").forEach(t=>{
-    t.addEventListener("click", ()=>{
-      const i = Number(t.getAttribute("data-i")||0);
-      main.src = PM_GALLERY[i] || PM_GALLERY[0] || "";
-      thumbs.querySelectorAll(".pm-thumb").forEach(x=>x.classList.remove("active"));
-      t.classList.add("active");
-    });
-  });
-
-  const btn = $("pmAdd");
-  btn.disabled = stock <= 0;
-  btn.textContent = stock > 0 ? "Añadir al carrito" : "Sin stock";
-  $("pmHint").textContent = stock > 0 ? "Podés añadir desde acá o desde el botón + en la card." : "No se puede agregar si no hay stock.";
-
-  $("backdrop").classList.remove("hidden");
-  $("pmodal").classList.remove("hidden");
- document.body.classList.add("ui-overlay-open");
-}
-window.openProduct = openProduct;
-
-function closeProduct(){
-  $("backdrop").classList.add("hidden");
-  $("pmodal").classList.add("hidden");
-  PM_SKU = null;
-  PM_GALLERY = [];
-  document.body.classList.remove("ui-overlay-open");
-}
-
-/* Cart drawer */
-function openCart(){
-  $("cartDrawer").classList.add("open");
-  renderCart();
-  document.body.classList.add("ui-overlay-open");
-}
-function closeCart(){
-  $("cartDrawer").classList.remove("open");
-  document.body.classList.remove("ui-overlay-open");
-}
-function goStep(step){
-  const isCart = step === "cart";
-  $("stepCart").classList.toggle("step-active", isCart);
-  $("stepData").classList.toggle("step-active", !isCart);
-
-  // ✅ 1 botón por paso
-  $("btnContinue").style.display = isCart ? "block" : "none";
-  $("btnSend").style.display = isCart ? "none" : "block";
-
-  $("cartBack").style.visibility = isCart ? "hidden" : "visible";
-
-  if(!isCart) renderCheckout();
-}
-
-function deliveryIsOn(){
-  return $("optDelivery").classList.contains("active");
-}
-
-function renderCart(){
-  const items = Object.values(CART);
-  updateCartBadge();
-
-  const box = $("cartItems");
-  if(items.length === 0){
-    box.innerHTML = `<div class="muted" style="padding:12px 0;">Carrito vacío</div>`;
-    $("btnContinue").disabled = true;
-    goStep("cart");
-  }else{
-    $("btnContinue").disabled = false;
-    box.innerHTML = items.map(it=>{
-      const p = findProduct(it.sku);
-      const stock = Number(p?.stock ?? 0);
-      const incDisabled = !(Number(it.qty||0) < stock);
-      const img = p ? mainImage(p) : "";
-      const subtotal = Number(p?.price || 0) * Number(it.qty||0);
-
-      return `
-        <div class="cart-item">
-          <div class="ci-img">
-            ${img ? `<img src="${escapeHtml(img)}" alt="img" loading="lazy">` : ``}
-          </div>
-          <div class="ci-left">
-            <div class="ci-name">${escapeHtml(it.description)}</div>
-            <div class="ci-price">${moneyARS(subtotal)}</div>
-          </div>
-          <div class="ci-actions">
-            <button class="del" type="button" onclick="removeFromCart('${escapeHtml(it.sku)}')" aria-label="Eliminar">✕</button>
-            <div class="qty">
-              <button type="button" onclick="decFromCart('${escapeHtml(it.sku)}')">−</button>
-              <div class="val">${Number(it.qty||0)}</div>
-              <button type="button" ${incDisabled ? "disabled":""} onclick="incFromCart('${escapeHtml(it.sku)}')">+</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  $("noteCount").textContent = ($("cartNote").value || "").length;
-
-  let subtotal = 0;
-  for(const it of items){
-    const p = findProduct(it.sku);
-    subtotal += Number(p?.price || 0) * Number(it.qty || 0);
-  }
-
-													   
-								  
-
-  const shipping = items.length > 0 ? SHIPPING_COST : 0;
-  const total = subtotal + shipping;
-													  
-
-  $("cartSubtotal").textContent = moneyARS(subtotal) || "$ 0";
-  $("cartShipping").textContent = moneyARS(shipping) || "$ 0";
-  $("cartTotal").textContent = moneyARS(total) || "$ 0";
-
-  $("addrBlock").style.display = deliveryIsOn() ? "block" : "none";
-
-  renderCheckout();
-}
-
-function renderCheckout(){
-  const items = Object.values(CART);
-  const box = $("checkoutSummary");
-  if(items.length === 0){
-    box.innerHTML = `<div class="muted">No hay productos.</div>`;
-    return;
-  }
-  box.innerHTML = items.map(it => {
-    const p = findProduct(it.sku);
-    const unit = Number(p?.price || 0);
-    const subtotal = unit * Number(it.qty||0);
-    return `
-      <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #eee;">
-        <div style="min-width:0;">
-          <div style="font-weight:1000;">${escapeHtml(it.description)}</div>
-          <div class="muted" style="font-weight:800;font-size:12px;">${escapeHtml(it.sku)} · ${Number(it.qty||0)}x</div>
-        </div>
-        <div style="font-weight:1000;white-space:nowrap;">${moneyARS(subtotal)}</div>
-      </div>
-    `;
-  }).join("");
-}
-
-function setErr(id, msg){
-  const el = $(id);
-  el.textContent = msg || "";
-  el.style.display = msg ? "block" : "none";
-}
-
-function validateCheckout(){
-  const name = ($("custName").value || "").trim();
-  const phone = ($("custPhone").value || "").trim();
-  const address = ($("custAddress").value || "").trim();
-
-  let ok = true;
-  setErr("errName", "");
-  setErr("errPhone", "");
-  setErr("errAddress", "");
-
-  if(Object.keys(CART).length === 0) ok = false;
-
-  if(!name){
-    setErr("errName", "Ingresá tu nombre y apellido.");
-    ok = false;
-  }
-  if(!phone){
-    setErr("errPhone", "Ingresá tu teléfono.");
-    ok = false;
-  }
-  if(deliveryIsOn() && !address){
-    setErr("errAddress", "Ingresá tu dirección para Entrega.");
-    ok = false;
-  }
-  return ok;
-}
-
-function buildWhatsAppMessage(){
-  const name = ($("custName").value || "").trim();
-  const phone = ($("custPhone").value || "").trim();
-  const address = ($("custAddress").value || "").trim();
-  const delivery = deliveryIsOn() ? "Entrega" : "Retiro";
-
-  // Fecha formato ddMMHHmm (ej: 07011433)
-  const now = new Date();
-  const pad = n => String(n).padStart(2, "0");
-  const orderId =
-    pad(now.getDate()) +
-    pad(now.getMonth() + 1) +
-    pad(now.getHours()) +
-    pad(now.getMinutes());
-
-  const items = Object.values(CART);
-
-  let subtotal = 0;
-  const lines = [];
-
-  lines.push(`PEDIDO #${orderId}`);
-  lines.push(`-------------------------------`);
-  lines.push(`➜ *DETALLES DEL PEDIDO*`);
-
-  items.forEach((it, i) => {
-    const p = findProduct(it.sku);
-    const unit = Number(p?.price || 0);
-    const lineTotal = unit * Number(it.qty || 0);
-    subtotal += lineTotal;
-
-    lines.push(
-      `${it.qty}x ${it.description} (Cód: ${it.sku}) - ${moneyARS(unit)}/unid`
+// Presentación: la fuente conserva su descripción original.
+function displayName(value) {
+  const special = {
+    "ferrari": "Ferrari",
+    "scuderia": "Scuderia",
+    "ray-ban": "Ray-Ban",
+    "rayban": "Ray-Ban",
+    "uv": "UV",
+    "3d": "3D",
+    "marron": "Marrón",
+    "degrade": "Degradé"
+  };
+
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("es-AR")
+    .replace(/\S+/g, word =>
+      special[word] ||
+      word.charAt(0).toLocaleUpperCase("es-AR") + word.slice(1)
     );
-  });
-
-  const shipping = items.length > 0 ? SHIPPING_COST : 0;
-  const total = subtotal + shipping;
-
-  lines.push(`-------------------------------`);
-  lines.push(`➜ *DATOS DEL CLIENTE*`);
-  lines.push(`Nombre: ${name}`);
-  lines.push(`Teléfono: +${phone}`);
-  if(deliveryIsOn()){
-    lines.push(`Dirección: ${address}`);
-  }
-
-  lines.push(`------------------------------`);
-  lines.push(`➜ *DETALLES DE ENVÍO*`);
-  lines.push(`Método: ${delivery}`);
-
-  lines.push(`-------------------------------`);
-  lines.push(`➜ *VALORES*`);
-  const totalItems = items.reduce((acc, it) => acc + Number(it.qty || 0), 0);
-  lines.push(`${totalItems} artículos: ${moneyARS(subtotal)}`);
-  lines.push(`Envio: ${moneyARS(shipping)}`);
-  lines.push(`Total: ${moneyARS(total)}`);
-
-  return lines.join("\n");
 }
-
-function sendWhatsApp(){
-  if(!validateCheckout()){
-    return;
-  }
-  if(!WHATSAPP_NUMBER){
-    alert("Configurá WHATSAPP_NUMBER en app.js");
-    return;
-  }
-  const msg = buildWhatsAppMessage();
-  const url = `https://wa.me/${encodeURIComponent(WHATSAPP_NUMBER)}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
+const product=sku=>all.find(p=>String(p.sku)===String(sku));
+const available=p=>Number(p.stock||0)>0;
+const stockText=p=>available(p)?`Stock disponible: ${Number(p.stock)} ${Number(p.stock)===1?"unidad":"unidades"}`:"Sin stock";
+function save(){localStorage.setItem(key,JSON.stringify(cart));updateCart()}
+function updateCart(){
+ const n=Object.values(cart).reduce((s,p)=>s+Number(p.qty||0),0);
+ $("cartCount").textContent=n;$("drawerCount").textContent="("+n+")";
+ let sum=0;
+ $("cartItems").innerHTML=Object.values(cart).map(c=>{
+ const p=product(c.sku);if(!p)return "";
+ sum+=Number(p.price||0)*Number(c.qty||0);
+ return `<div class="cart-item"><img src="${escapeHTML(p.foto_url||"")}" alt=""><div><strong>${escapeHTML(displayName(p.description))}</strong><p>${money(p.price)} · Stock ${Number(p.stock||0)}</p><button data-dec="${escapeHTML(p.sku)}">−</button> <span>${Number(c.qty)}</span> <button data-inc="${escapeHTML(p.sku)}">+</button> <button data-remove="${escapeHTML(p.sku)}">Quitar</button></div></div>`;
+ }).join("")||"<p>Tu carrito está vacío.</p>";
+ $("subtotal").textContent=money(sum);
 }
-
-/* Load number phone */
-async function loadVendedor(){
-  const vendedor = window.location.pathname
-    .replace(/^\/+|\/+$/g, "");
-
-  let url = (API_BASE ? API_BASE : "") + "/api/vendedor";
-
-  if (vendedor) {
-    url += "/" + encodeURIComponent(vendedor);
-  }
-
-  const r = await fetch(url, { cache: "no-store" });
-
-  if (!r.ok) {
-    throw new Error("No se pudo cargar el vendedor");
-  }
-
-  const data = await r.json();
-
-  WHATSAPP_NUMBER = data.telefono;
-
-  // WhatsApp del botón flotante
-const waFloat = $("waFloat");
-
-if (waFloat) {
-  const msg = "Hola, quiero hacer una consulta sobre los lentes";
-  
-  waFloat.href =
-    `https://wa.me/${encodeURIComponent(WHATSAPP_NUMBER)}?text=${encodeURIComponent(msg)}`;
+function add(sku){
+ const p=product(sku);if(!p||!available(p))return;
+ const k=String(sku),qty=Number(cart[k]?.qty||0);
+ if(qty>=Number(p.stock))return alert("No hay más unidades disponibles.");
+ cart[k]={sku:k,description:p.description,qty:qty+1};
+ save();openCart();
 }
+function openCart(){$("overlay").hidden=false;$("drawer").classList.add("open");$("drawer").setAttribute("aria-hidden","false")}
+function closeCart(){$("overlay").hidden=true;$("drawer").classList.remove("open");$("drawer").setAttribute("aria-hidden","true")}
+function wa(text){if(!phone){alert("No se pudo obtener el teléfono del vendedor.");return}window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(text),"_blank","noopener")}
+function renderCategories(){
+ const counts={};all.forEach(p=>counts[p._category]=(counts[p._category]||0)+1);
+ const cats=Object.keys(counts).sort((a,b)=>a.localeCompare(b,"es"));
+ const label=c=>c==="TODOS"?"Todos":c;
+ $("chips").innerHTML=["TODOS",...cats].map(c=>`<button class="chip ${selected===c?"active":""}" data-category="${escapeHTML(c)}">${escapeHTML(label(c))}</button>`).join("");
+ $("categoryList").innerHTML=["TODOS",...cats].map(c=>`<button data-category="${escapeHTML(c)}">${escapeHTML(label(c))} (${c==="TODOS"?all.length:counts[c]})</button>`).join("");
 }
-
-/* Load products */
-async function loadCatalog(){
-  const vendedor = window.location.pathname
-  .replace(/^\/+|\/+$/g, "");
-let url = (API_BASE ? API_BASE : "") + "/products";
-if (vendedor) {
-  url += "?vendedor=" + encodeURIComponent(vendedor);
+function render(){
+ renderCategories();
+ const q=$("search").value.trim().toLowerCase();
+ let items=all.filter(p=>(selected==="TODOS"?available(p):p._category===selected)&&(!q||(String(p.description||"")+" "+p.sku).toLowerCase().includes(q)));
+  // Orden anterior: Ferrari primero, luego SKU nuevos y descripción.
+ /*if(selected==="TODOS")items.sort((a,b)=>{
+ const fa=a._category==="FERRARI",fb=b._category==="FERRARI";if(fa!==fb)return fa?-1:1;
+ const na=Number(a.sku)>=100611,nb=Number(b.sku)>=100611;if(na!==nb)return na?-1:1;
+ return String(a.description).localeCompare(String(b.description),"es");
+ });*/
+  // Nuevo orden: SKU de mayor a menor en "Todos".
+  if (selected === "TODOS") {
+    items.sort((a, b) => Number(b.sku) - Number(a.sku));
+  }
+ $("categoryTitle").textContent=selected==="TODOS"?"Todos los modelos":selected;
+ $("resultCount").textContent=`${items.length} modelos`;
+ $("message").textContent=items.length?"":"No encontramos modelos para esta búsqueda.";
+ const pages=Math.max(1,Math.ceil(items.length/pageSize));page=Math.min(page,pages);
+ const shown=items.slice((page-1)*pageSize,page*pageSize);
+ $("pagination").innerHTML=items.length<=pageSize?"":`<button data-page="${page-1}" ${page===1?"disabled":""}>‹</button>${Array.from({length:pages},(_,i)=>i+1).filter(n=>n===1||n===pages||Math.abs(n-page)<=2).map((n,i,arr)=>`${i&&n-arr[i-1]>1?'<span>…</span>':""}<button data-page="${n}" ${n===page?'class="active" aria-current="page"':""}>${n}</button>`).join("")}<button data-page="${page+1}" ${page===pages?"disabled":""}>›</button>`;
+ $("products").innerHTML=shown.map(p=>{
+ const sku=escapeHTML(p.sku),name=escapeHTML(displayName(p.description)),img=escapeHTML(p.foto_url||"");
+ return `<article class="product"><div class="photo" data-detail="${sku}">${img?`<img loading="lazy" src="${img}" alt="${name}">`:"<span>Imagen no disponible</span>"}${!available(p)?'<span class="stock-label">Sin stock</span>':""}</div><div class="product-body"><div class="category">${escapeHTML(p._category)}</div><h3>${name}</h3><div class="price">${money(p.price)}</div><div class="product-stock ${available(p)?"in-stock":"out-stock"}">${stockText(p)}</div><div class="actions"><button class="secondary" data-detail="${sku}">Ver detalle</button><button data-add="${sku}" ${available(p)?"":"disabled"}>${available(p)?"Agregar +":"Sin stock"}</button></div></div></article>`;
+ }).join("");
 }
-  const r = await fetch(url, { cache:"no-store" });
-  if(!r.ok) throw new Error("HTTP " + r.status);
-  const data = await r.json();
-  const items = data.items || data.products || data.data || data || [];
-  ALL = Array.isArray(items) ? items : [];
-  renderCategoriesUI();
-  applyFilters();
-  renderCart();
-  updateCartBadge();
+function detail(sku){
+ const p=product(sku);if(!p)return;
+ const imgs=Array.isArray(p.gallery)&&p.gallery.length?p.gallery:[p.foto_url].filter(Boolean);
+ const prices=priceOptions(p);
+ $("detailContent").dataset.sku=String(p.sku);
+ $("detailContent").innerHTML=`<div class="detail-layout">
+ <div class="detail-photos">
+ <img id="mainDetailImage" src="${escapeHTML(imgs[0]||"")}" alt="${escapeHTML(displayName(p.description))}">
+ <div class="detail-thumbs">${imgs.slice(0,6).map((url,i)=>`<button class="thumb ${i===0?"selected":""}" data-img="${escapeHTML(url)}" aria-label="Ver foto ${i+1}"><img src="${escapeHTML(url)}" alt="Vista ${i+1}"></button>`).join("")}</div>
+ </div>
+ <div class="detail-info">
+ <span class="eyebrow">${escapeHTML(p._category)}</span>
+ <h2>${escapeHTML(displayName(p.description))}</h2>
+ <p class="detail-sku">SKU ${escapeHTML(p.sku)}</p>
+ <p class="product-stock ${available(p)?"in-stock":"out-stock"}">${stockText(p)}</p>
+ <div class="transfer-price"><span>Precio por transferencia</span><strong>${money(prices.transfer)}</strong></div>
+ <details class="payment-options">
+   <summary><span>💳 Otras opciones de pago</span><span class="payment-chevron" aria-hidden="true">⌄</span></summary>
+   <div class="payment-options-body">
+     <label for="mpPlan">Elegí una opción de Mercado Pago</label>
+     <select id="mpPlan" class="payment-select">
+       <option value="1">1 pago</option>
+       <option value="3">3 cuotas</option>
+     </select>
+     <div class="payment-result" aria-live="polite">
+       <span id="mpPriceLabel">Total con Mercado Pago</span>
+       <strong id="mpPriceValue">${money(prices.one)}</strong>
+       <small id="mpPriceTotal" hidden></small>
+     </div>
+   </div>
+ </details>
+ <div class="detail-actions">
+ <button class="primary" data-add="${escapeHTML(p.sku)}" ${available(p)?"":"disabled"}>${available(p)?"Agregar al carrito":"Sin stock"}</button>
+ <button class="secondary detail-consult" data-consult="${escapeHTML(p.sku)}">Consultar por WhatsApp ↗</button>
+ </div>
+ </div></div>`;
+ $("detail").showModal();
 }
-
-function toggleView(){
-  VIEW_MODE = (VIEW_MODE === "grid") ? "list" : "grid";
-  $("viewIcon").textContent = (VIEW_MODE === "grid") ? "▦" : "≡";
-  applyFilters();
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  loadCart();
-  updateCartBadge();
-
-  // Header
-  $("btnBackTop").addEventListener("click", () => history.back());
-
-  // Cart
-  $("btnOpenCart").addEventListener("click", openCart);
-  $("cartClose").addEventListener("click", closeCart);
-  $("cartBack").addEventListener("click", () => goStep("cart"));
-
-  // Cart buttons
-  $("btnContinue").addEventListener("click", () => {
-    if(Object.keys(CART).length === 0) return;
-    goStep("data");
-  });
-  $("btnSend").addEventListener("click", sendWhatsApp);
-
-  $("btnClearCart").addEventListener("click", clearCart);
-  $("btnMoreProducts").addEventListener("click", () => {
-    closeCart();
-    // scroll al top de productos
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-
-  // Note count
-  $("cartNote").addEventListener("input", () => {
-    $("noteCount").textContent = ($("cartNote").value || "").length;
-  });
-
-  // Delivery radios
-  $("optDelivery").addEventListener("click", () => {
-    $("optDelivery").classList.add("active");
-    $("optPickup").classList.remove("active");
-    renderCart();
-  });
-  $("optPickup").addEventListener("click", () => {
-    $("optPickup").classList.add("active");
-    $("optDelivery").classList.remove("active");
-    renderCart();
-  });
-
-  // Modal
-  $("pmClose").addEventListener("click", closeProduct);
-  $("backdrop").addEventListener("click", closeProduct);
-  $("pmAdd").addEventListener("click", () => {
-    if(!PM_SKU) return;
-    addToCart(PM_SKU);
-  });
-
-  // Filters / view
-  $("q").addEventListener("input", applyFilters);
-  $("btnToggleView").addEventListener("click", toggleView);
-
-  // Hide send button until step 2
-  $("btnSend").style.display = "none";
-  $("btnContinue").style.display = "block";
-  $("cartBack").style.visibility = "hidden";
-					 
-									
-				   
-												
-						   
-
-  // ✅ Popup "Agregado correctamente"
-  const bd = $("addPopBackdrop");
-  const b1 = $("apContinue");
-  const b2 = $("apGoCart");
-
-  if(bd) bd.addEventListener("click", closeAddPopup);
-
-  if(b1){
-    b1.addEventListener("click", () => {
-      closeAddPopup();
-    });
-  }
-
-  if(b2){
-    b2.addEventListener("click", () => {
-      closeAddPopup();
-      openCart();
-      goStep("cart");
-    });
-  }
-
-  document.addEventListener("keydown", (e) => {
-    if(e.key === "Escape") closeAddPopup();
-  });
-
-  // consulta Productos
-  const pmConsultBtn = $("pmConsult");
-  if (pmConsultBtn) {
-    pmConsultBtn.addEventListener("click", () => {
-      if(!PM_PRODUCT) return;
-
-      const msg = `Tengo una consulta sobre el lente : ${PM_PRODUCT.sku} - ${PM_PRODUCT.description}`;
-      const url = `https://wa.me/${encodeURIComponent(WHATSAPP_NUMBER)}?text=${encodeURIComponent(msg)}`;
-
-      window.open(url, "_blank", "noopener,noreferrer");
-    });
-  }
-
-  try{
-    await loadVendedor();
-    await loadCatalog();
-  }catch(err){
-    console.error(err);
-    $("meta").textContent = "Error cargando /products: " + err.message;
-  }
+document.addEventListener("click",e=>{
+ const el=e.target.closest("[data-page],[data-category],[data-add],[data-detail],[data-inc],[data-dec],[data-remove],[data-consult],[data-img]");
+ if(!el)return;
+ if(el.dataset.page){page=Number(el.dataset.page);render();$("catalogo").scrollIntoView({behavior:"smooth"});return}
+ if(el.dataset.category){page=1;selected=el.dataset.category;$("categoryPanel").hidden=true;render();$("catalogo").scrollIntoView({behavior:"smooth"})}
+ if(el.dataset.add){add(el.dataset.add)}
+ if(el.dataset.detail){detail(el.dataset.detail)}
+ if(el.dataset.consult){const p=product(el.dataset.consult);if(p)wa(`Hola! Quiero consultar por ${p.description} (SKU ${p.sku}).`)}
+ if(el.dataset.img){$("mainDetailImage").src=el.dataset.img;document.querySelectorAll(".detail-thumbs .thumb").forEach(b=>b.classList.toggle("selected",b.dataset.img===el.dataset.img));}
+ if(el.dataset.inc||el.dataset.dec||el.dataset.remove){
+ const k=el.dataset.inc||el.dataset.dec||el.dataset.remove,p=product(k);
+ if(el.dataset.remove)delete cart[k];
+ else if(el.dataset.inc&&p&&Number(cart[k]?.qty||0)<Number(p.stock))cart[k].qty++;
+ else if(el.dataset.dec&&cart[k]){cart[k].qty--;if(cart[k].qty<=0)delete cart[k]}
+ save();
+ }
 });
+// El selector solo actualiza el precio informativo del detalle.
+document.addEventListener("change",e=>{
+ if(e.target.id!=="mpPlan")return;
+ const p=product($("detailContent").dataset.sku);
+ if(!p)return;
+ const prices=priceOptions(p);
+ const three=e.target.value==="3";
+ $("mpPriceLabel").textContent=three?"3 cuotas de":"Total con Mercado Pago";
+ $("mpPriceValue").textContent=money(three?prices.three/3:prices.one);
+ $("mpPriceTotal").hidden=!three;
+ $("mpPriceTotal").textContent=three?"Total financiado: "+money(prices.three):"";
+});
+$("search").addEventListener("input",()=>{page=1;render()});
+$("pageSize").addEventListener("change",e=>{pageSize=Number(e.target.value);page=1;render()});
+$("allCategories").onclick=()=>$("categoryPanel").hidden=!$("categoryPanel").hidden;
+$("closeCategories").onclick=()=>$("categoryPanel").hidden=true;
+$("openCart").onclick=openCart;$("closeCart").onclick=closeCart;$("overlay").onclick=closeCart;
+$("closeDetail").onclick=()=>$("detail").close();
+$("checkout").onclick=()=>{
+ const items=Object.values(cart);if(!items.length)return alert("Tu carrito está vacío.");
+ const text="Hola! Quiero hacer un pedido de Lentes CBA:\n"+items.map(c=>`• ${c.description} (SKU ${c.sku}) x${c.qty}`).join("\n")+"\n¿Me ayudan a coordinar la compra?";
+ wa(text);
+};
+$("whatsapp").onclick=e=>{e.preventDefault();wa("Hola! Quería consultar por los lentes de Lentes CBA.")};
+const announcements=["🇦🇷 Envíos gratis a todo el país","💳 Todos los medios de pago","📍 Córdoba Capital"];
+let announcementIndex=0;
+setInterval(()=>{
+ const el=$("announcementText");el.classList.add("exit");
+ setTimeout(()=>{announcementIndex=(announcementIndex+1)%announcements.length;el.textContent=announcements[announcementIndex];el.classList.remove("exit");el.classList.add("enter");requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove("enter")))},350);
+},4500);
+$("waDismiss").onclick=()=>{$("waBubble").hidden=true};
+async function loadSeller(){
+ const seller = vendedor;
+ const url="/api/vendedor"+(seller?"/"+encodeURIComponent(seller):"");
+ const res=await fetch(url);
+ if(!res.ok)throw new Error("No se pudo consultar el vendedor");
+ const data=await res.json();
+ phone=String(data.telefono||"").replace(/\D/g,"");
+ if(!phone)throw new Error("El vendedor no tiene teléfono configurado");
+ $("sellerLabel").innerHTML="Vendedor: <strong>"+escapeHTML(seller||data.nombre||data.name||"Lentes CBA")+"</strong>";
+
+}
+$("entrepreneur").href="https://wa.me/"+OWNER_WHATSAPP+"?text="+encodeURIComponent("Hola, quiero emprender con Lentes CBA.");
+async function init(){
+ try{
+ await loadSeller();
+ const res=await fetch(API);if(!res.ok)throw Error("HTTP "+res.status);
+ const data=await res.json();all=(data.items||[]).map(p=>({...p,_category:category(p.description)}));
+ if(!all.length)throw Error("No se recibieron productos");
+ render();updateCart();
+ }catch(err){$("message").textContent="No se pudo cargar el catálogo: "+err.message;}
+
+}
+init();
