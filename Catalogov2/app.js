@@ -84,11 +84,16 @@ function render(){
  renderCategories();
  const q=$("search").value.trim().toLowerCase();
  let items=all.filter(p=>(selected==="TODOS"?available(p):p._category===selected)&&(!q||(String(p.description||"")+" "+p.sku).toLowerCase().includes(q)));
- if(selected==="TODOS")items.sort((a,b)=>{
+  // Orden anterior: Ferrari primero, luego SKU nuevos y descripción.
+ /*if(selected==="TODOS")items.sort((a,b)=>{
  const fa=a._category==="FERRARI",fb=b._category==="FERRARI";if(fa!==fb)return fa?-1:1;
  const na=Number(a.sku)>=100611,nb=Number(b.sku)>=100611;if(na!==nb)return na?-1:1;
  return String(a.description).localeCompare(String(b.description),"es");
- });
+ });*/
+  // Nuevo orden: SKU de mayor a menor en "Todos".
+  if (selected === "TODOS") {
+    items.sort((a, b) => Number(b.sku) - Number(a.sku));
+  }
  $("categoryTitle").textContent=selected==="TODOS"?"Todos los modelos":selected;
  $("resultCount").textContent=`${items.length} modelos`;
  $("message").textContent=items.length?"":"No encontramos modelos para esta búsqueda.";
