@@ -25,11 +25,28 @@ function category(desc){
  if(t.includes("CAT")&&!t.includes("CATCH"))return "CAT EYE";
  return t.split(/\s+/)[0]||"OTROS";
 }
-// Presentación: la fuente de datos conserva su descripción original.
-function displayName(value){
- const special={"ferrari":"Ferrari","scuderia":"Scuderia","ray-ban":"Ray-Ban","rayban":"Ray-Ban","uv":"UV","3d":"3D","marron":"Marrón","degrade":"Degradé"};
- return String(value??"").trim().replace(/\\s+/g," ").toLocaleLowerCase("es-AR")
- .replace(/[^\\s]+/g,w=>special[w]||w.charAt(0).toLocaleUpperCase("es-AR")+w.slice(1));
+
+// Presentación: la fuente conserva su descripción original.
+function displayName(value) {
+  const special = {
+    "ferrari": "Ferrari",
+    "scuderia": "Scuderia",
+    "ray-ban": "Ray-Ban",
+    "rayban": "Ray-Ban",
+    "uv": "UV",
+    "3d": "3D",
+    "marron": "Marrón",
+    "degrade": "Degradé"
+  };
+
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("es-AR")
+    .replace(/\S+/g, word =>
+      special[word] ||
+      word.charAt(0).toLocaleUpperCase("es-AR") + word.slice(1)
+    );
 }
 const product=sku=>all.find(p=>String(p.sku)===String(sku));
 const available=p=>Number(p.stock||0)>0;
