@@ -4,6 +4,7 @@ import pandas as pd
 import requests
 from io import BytesIO
 import re
+from threading import Lock
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from images_map import IMAGES  # <-- tu mapa manual de imágenes
@@ -31,9 +32,23 @@ def health():
 
 import time
 
-_CACHE = {}
-
 CACHE_SECONDS = 300
+SELLER_CACHE_SECONDS = 60
+_DF_CACHE = {}
+_DF_LOCK = Lock()
+_SELLER_CACHE = {}
+_SELLER_LOCK = Lock()
+
+
+def _cached_df():
+    # Compartimos stock/modelos entre vendedores, sin compartir sus precios.
+    with _DF_LOCK:
+        cached = _DF_CACHE.get("data")
+        if cached and time.monotonic() - cached["ts"] < CACHE_SECONDS:
+            return cached["value"]
+        value = _load_df()
+        _DF_CACHE["data"] = {"value": value, "ts": time.monotonic()}
+        return value
 
 app.mount("/static", StaticFiles(directory="."), name="static")
 @app.get("/")
@@ -235,18 +250,7 @@ def products(vendedor: str | None = None):
     precio_lentes_vendedor = float(config["precio_lentes"])
     precio_polarizado_vendedor = float(config["precio_polarizado"])
 
-    now = time.time()
-
-    cache_key = vendedor.lower() if vendedor else "__principal__"
-
-    cached = _CACHE.get(cache_key)
-
-    # Si el cache de este vendedor es válido, lo devolvemos
-    if cached and (now - cached["ts"]) < CACHE_SECONDS:
-        return cached["products"]
-
-    # Si no hay cache o expiró, recalculamos
-    out, header_row, columns = _load_df()
+    out, header_row, columns = _cached_df()
     items = out.to_dict(orient="records")
 
     for it in items:
@@ -280,12 +284,6 @@ def products(vendedor: str | None = None):
         "items": items
     }
 
-    # Guardamos cache para este vendedor
-    _CACHE[cache_key] = {
-        "products": payload,
-        "ts": now
-    }
-
     return payload
 
 @app.get("/stock/{sku}")
@@ -305,7 +303,7 @@ def stock_by_sku(sku: str):
 
 @app.get("/debug")
 def debug():
-    out, header_row, columns = _load_df()
+    out, header_row, columns = _cached_df()
     items = out.head(5).to_dict(orient="records")
     return {
         "header_row_detected": header_row,
@@ -319,6 +317,17 @@ def debug():
 @app.get("/api/vendedor")
 @app.get("/api/vendedor/{url}")
 def get_vendedor(url: str | None = None):
+    cache_key = (url or "").strip().lower()
+    with _SELLER_LOCK:
+        cached = _SELLER_CACHE.get(cache_key)
+        if cached and time.monotonic() - cached["ts"] < SELLER_CACHE_SECONDS:
+            return dict(cached["value"])
+        value = _fetch_vendedor(cache_key or None)
+        _SELLER_CACHE[cache_key] = {"value": dict(value), "ts": time.monotonic()}
+        return value
+
+
+def _fetch_vendedor(url: str | None = None):
 
     headers = {
         "apikey": SUPABASE_ANON_KEY,
@@ -399,3 +408,4 @@ def vendedor_page(vendedor: str):
     get_vendedor(vendedor)
 
     return FileResponse("index.html")
+

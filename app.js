@@ -68,7 +68,14 @@ function add(sku){
  const k=String(sku),qty=Number(cart[k]?.qty||0);
  if(qty>=Number(p.stock))return alert("No hay más unidades disponibles.");
  cart[k]={sku:k,description:p.description,qty:qty+1};
- save();openCart();
+ save();
+ if(window.matchMedia("(max-width:850px)").matches){
+  $("addedProductName").textContent=displayName(p.description);
+  if(!$("addedToCart").open)$("addedToCart").showModal();
+ }else{
+  if($("detail").open)$("detail").close();
+  openCart();
+ }
 }
 function openCart(){$("overlay").hidden=false;$("drawer").classList.add("open");$("drawer").setAttribute("aria-hidden","false")}
 function closeCart(){$("overlay").hidden=true;$("drawer").classList.remove("open");$("drawer").setAttribute("aria-hidden","true")}
@@ -177,6 +184,13 @@ $("pageSize").addEventListener("change",e=>{pageSize=Number(e.target.value);page
 $("allCategories").onclick=()=>$("categoryPanel").hidden=!$("categoryPanel").hidden;
 $("closeCategories").onclick=()=>$("categoryPanel").hidden=true;
 $("openCart").onclick=openCart;$("closeCart").onclick=closeCart;$("overlay").onclick=closeCart;
+$("continueShopping").onclick=()=>$("addedToCart").close();
+$("goToCart").onclick=()=>{
+ $("addedToCart").close();
+ if($("detail").open)$("detail").close();
+ openCart();
+ $("closeCart").focus();
+};
 $("closeDetail").onclick=()=>$("detail").close();
 $("checkout").onclick=()=>{
  const items=Object.values(cart);if(!items.length)return alert("Tu carrito está vacío.");
@@ -205,8 +219,7 @@ async function loadSeller(){
 $("entrepreneur").href="https://wa.me/"+OWNER_WHATSAPP+"?text="+encodeURIComponent("Hola, quiero emprender con Lentes CBA.");
 async function init(){
  try{
- await loadSeller();
- const res=await fetch(API);if(!res.ok)throw Error("HTTP "+res.status);
+ const [, res]=await Promise.all([loadSeller(),fetch(API)]);if(!res.ok)throw Error("HTTP "+res.status);
  const data=await res.json();all=(data.items||[]).map(p=>({...p,_category:category(p.description)}));
  if(!all.length)throw Error("No se recibieron productos");
  render();updateCart();
@@ -214,3 +227,4 @@ async function init(){
 
 }
 init();
+

@@ -6,7 +6,7 @@
 
   <title>Lentes CBA · Colección</title>
 
-  <link rel="stylesheet" href="/static/styles.css?v=4.3.0">
+  <link rel="stylesheet" href="/static/styles.css?v=4.4.0">
 </head>
 
 <body>
@@ -200,6 +200,16 @@
     <div id="detailContent"></div>
   </dialog>
 
-  <script src="/static/app.js?v=4.3.0"></script>
+  <dialog id="addedToCart" class="added-to-cart" aria-labelledby="addedTitle" aria-describedby="addedProductName">
+    <span class="added-check" aria-hidden="true">✓</span>
+    <h2 id="addedTitle">¡Agregado al carrito!</h2>
+    <p id="addedProductName"></p>
+    <div class="added-actions">
+      <button id="goToCart" class="primary" autofocus>Ir al carrito</button>
+      <button id="continueShopping" class="secondary">Continuar comprando</button>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js?v=4.4.0"></script>
 </body>
 </html>

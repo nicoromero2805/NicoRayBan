@@ -116,3 +116,14 @@ footer a{text-decoration:none;font-weight:700}
  .product .product-body h3{font-size:11px}
  .product .product-body .actions button{font-size:10px;min-height:36px}
 }
+
+
+/* Confirmación visible incluso sobre el detalle del producto. */
+.added-to-cart{width:min(390px,calc(100vw - 32px));padding:28px 22px;text-align:center;max-height:calc(100dvh - 32px);overflow:auto}
+.added-check{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#e8f4eb;color:#317348;font-size:27px;margin:0 auto 14px}
+.added-to-cart h2{font-size:22px;margin:0 0 12px}
+.added-to-cart p{font-size:14px;line-height:1.5;overflow-wrap:anywhere;color:var(--muted)}
+.added-actions{display:grid;gap:10px;margin-top:22px}
+.added-actions button{width:100%;min-height:46px;border:1px solid var(--ink);border-radius:8px;padding:12px;font-weight:600}
+.added-actions .secondary{background:white;color:var(--ink)}
+.drawer{height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
