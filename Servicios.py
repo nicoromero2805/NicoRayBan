@@ -1,3 +1,7 @@
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import asynccontextmanager
+import logging
+import time
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
@@ -9,7 +13,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from images_map import IMAGES  # <-- tu mapa manual de imágenes
 
-app = FastAPI(title="Servicios Lentes")
 # =========================
 # Supabase
 # =========================
@@ -20,9 +23,13 @@ SUPABASE_ANON_KEY = "sb_publishable_DKQc0tfkhL-m-TIKV1215g_nXPQGpIr"
 Precio_lentes = 125000
 precio_polarizado = 135000
 
-from fastapi import FastAPI
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    with _DF_LOCK:
+        _schedule_catalog_refresh()
+    yield
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/health")
 def health():
@@ -30,25 +37,52 @@ def health():
     # Podés agregar checks (DB, Redis, etc.) si querés, pero cuanto más liviano mejor.
     return {"status": "ok"}
 
-import time
-
-CACHE_SECONDS = 300
+CACHE_SECONDS = 60 * 60
+CATALOG_RETRY_SECONDS = 60
 SELLER_CACHE_SECONDS = 60
 _DF_CACHE = {}
 _DF_LOCK = Lock()
+_DF_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="catalog-refresh")
 _SELLER_CACHE = {}
 _SELLER_LOCK = Lock()
+logger = logging.getLogger(__name__)
+
+
+def _refresh_catalog():
+    try:
+        value = _load_df()
+    except Exception:
+        with _DF_LOCK:
+            _DF_CACHE["retry_after"] = time.monotonic() + CATALOG_RETRY_SECONDS
+        logger.exception("No se pudo actualizar el catálogo desde Google Sheets")
+        raise
+
+    with _DF_LOCK:
+        _DF_CACHE.update(value=value, expires_at=time.monotonic() + CACHE_SECONDS)
+    return value
+
+
+def _schedule_catalog_refresh():
+    # El llamador sostiene el candado solo mientras consulta o cambia el estado.
+    refresh = _DF_CACHE.get("refresh")
+    if refresh is None or refresh.done():
+        refresh = _DF_EXECUTOR.submit(_refresh_catalog)
+        _DF_CACHE["refresh"] = refresh
+    return refresh
 
 
 def _cached_df():
-    # Compartimos stock/modelos entre vendedores, sin compartir sus precios.
     with _DF_LOCK:
-        cached = _DF_CACHE.get("data")
-        if cached and time.monotonic() - cached["ts"] < CACHE_SECONDS:
-            return cached["value"]
-        value = _load_df()
-        _DF_CACHE["data"] = {"value": value, "ts": time.monotonic()}
-        return value
+        cached = _DF_CACHE.get("value")
+        if cached is not None:
+            now = time.monotonic()
+            if now >= max(_DF_CACHE["expires_at"], _DF_CACHE.get("retry_after", 0)):
+                _schedule_catalog_refresh()
+            return cached
+        refresh = _schedule_catalog_refresh()
+
+    # Solo la primera carga espera a que haya un catálogo disponible.
+    return refresh.result()
 
 app.mount("/static", StaticFiles(directory="."), name="static")
 @app.get("/")
